@@ -40,7 +40,6 @@ export type GamePhase =
   | 'night-role-protector'
   | 'night-role-cupido'
   | 'night-role-zorro'
-  | 'day-resolve'      // internal: resolve deaths, then transition to day-announce
   | 'day-announce'
   | 'day-debate'
   | 'day-vote'
@@ -65,5 +64,10 @@ export interface GameState {
   witchLifeUsed: boolean;
   witchDeathUsed: boolean;
   protectorLastProtected: number | null;
-  winner: 'villagers' | 'wolves' | null;
+  // Cupido state
+  cupidLovers: [number, number] | null;   // indices of the two lovers
+  // Zorro state
+  zorroActive: boolean;                    // loses power if first guess was wrong
+  // Winner
+  winner: 'villagers' | 'wolves' | 'lovers' | null;
 }

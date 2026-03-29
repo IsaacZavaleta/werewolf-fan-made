@@ -7,16 +7,27 @@ import type { Player } from '../../types';
 interface Props {
   players: Player[];
   round: number;
+  cupidLovers: [number, number] | null;
   onConfirmLynch: (index: number) => void;
   onSkipLynch: () => void;
 }
 
-export function DayVote({ players, round, onConfirmLynch, onSkipLynch }: Props) {
+export function DayVote({ players, round, cupidLovers, onConfirmLynch, onSkipLynch }: Props) {
   const [selected, setSelected] = useState<number | null>(null);
   const [confirming, setConfirming] = useState(false);
 
   const alivePlayers = players.filter(p => p.alive);
   const target = selected !== null ? players[selected] : null;
+
+  // Warn if a lover will die too
+  const loverWillDie = selected !== null && cupidLovers
+    ? (cupidLovers[0] === selected && players[cupidLovers[1]]?.alive)
+      || (cupidLovers[1] === selected && players[cupidLovers[0]]?.alive)
+    : false;
+
+  const partnerName = loverWillDie && cupidLovers && selected !== null
+    ? players[selected === cupidLovers[0] ? cupidLovers[1] : cupidLovers[0]]?.name
+    : null;
 
   if (confirming && target) {
     return (
@@ -40,6 +51,15 @@ export function DayVote({ players, round, onConfirmLynch, onSkipLynch }: Props) 
           <div style={{ fontSize: '.9rem', color: 'rgba(245,230,200,.6)', fontStyle: 'italic' }}>
             será linchado por el pueblo
           </div>
+          {loverWillDie && partnerName && (
+            <div style={{
+              background: 'rgba(139,0,0,.2)', border: '1px solid rgba(224,85,85,.3)',
+              borderRadius: '6px', padding: '10px 20px',
+              fontSize: '.85rem', color: '#e05555',
+            }}>
+              💔 <strong>{partnerName}</strong> también morirá de amor
+            </div>
+          )}
         </div>
 
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -66,6 +86,16 @@ export function DayVote({ players, round, onConfirmLynch, onSkipLynch }: Props) 
         selected={selected}
         onSelect={setSelected}
       />
+
+      {loverWillDie && partnerName && selected !== null && (
+        <div style={{
+          fontSize: '.85rem', color: '#e05555',
+          background: 'rgba(139,0,0,.12)', border: '1px solid rgba(224,85,85,.2)',
+          borderRadius: '6px', padding: '8px 18px',
+        }}>
+          ⚠️ Linchar a <strong>{players[selected].name}</strong> también matará a <strong>{partnerName}</strong> (enamorado/a)
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
         <Button variant="ghost" onClick={onSkipLynch}>

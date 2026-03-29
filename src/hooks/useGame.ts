@@ -1,14 +1,22 @@
 import { useState, useCallback } from 'react';
 import type { Player, GameState, GamePhase, NightResult } from '../types';
 
+// ─────────────────────────────────────────────────────────────
+// Constants
+// ─────────────────────────────────────────────────────────────
 const WOLF_IDS = new Set(['lobo', 'feroz', 'padre', 'albino', 'perrolobo']);
 
-const NIGHT_ROLE_ORDER = ['vidente', 'bruja', 'protector', 'cupido', 'zorro'] as const;
+const NIGHT_ROLE_ORDER = [
+  'vidente', 'bruja', 'protector', 'cupido', 'zorro',
+] as const;
 
+// ─────────────────────────────────────────────────────────────
+// Pure helpers
+// ─────────────────────────────────────────────────────────────
 function buildPendingRoles(players: Player[], isFirst: boolean): string[] {
-  const alive = new Set(players.filter(p => p.alive).map(p => p.role?.id));
+  const aliveIds = new Set(players.filter(p => p.alive).map(p => p.role?.id));
   return NIGHT_ROLE_ORDER.filter(id => {
-    if (!alive.has(id)) return false;
+    if (!aliveIds.has(id)) return false;
     if (id === 'cupido' && !isFirst) return false;
     return true;
   });
@@ -18,10 +26,22 @@ function emptyNightResult(): NightResult {
   return { wolfVictim: null, savedByWitch: false, killedByWitch: null, protectedIndex: null };
 }
 
-function checkWinner(players: Player[]): 'villagers' | 'wolves' | null {
+function checkWinner(
+  players: Player[],
+  lovers: [number, number] | null,
+): GameState['winner'] {
   const alive = players.filter(p => p.alive);
+
+  // Lovers win: exactly the two lovers remain and no-one else
+  if (lovers) {
+    const [a, b] = lovers;
+    const bothAlive = players[a]?.alive && players[b]?.alive;
+    if (bothAlive && alive.length === 2) return 'lovers';
+  }
+
   const wolves = alive.filter(p => p.role && WOLF_IDS.has(p.role.id));
   const villagers = alive.filter(p => !p.role || !WOLF_IDS.has(p.role.id));
+
   if (wolves.length === 0) return 'villagers';
   if (wolves.length >= villagers.length) return 'wolves';
   return null;
@@ -29,6 +49,66 @@ function checkWinner(players: Player[]): 'villagers' | 'wolves' | null {
 
 function hasRole(players: Player[], id: string): boolean {
   return players.some(p => p.alive && p.role?.id === id);
+}
+
+/** Pop next alive pending role, resolve night when empty */
+function advanceNightRole(prev: GameState): GameState {
+  const aliveIds = new Set(prev.players.filter(p => p.alive).map(p => p.role?.id));
+  let remaining = [...prev.pendingNightRoles];
+  let next = remaining.shift();
+
+  while (next && !aliveIds.has(next)) {
+    next = remaining.shift();
+  }
+
+  if (next) {
+    return { ...prev, pendingNightRoles: remaining, phase: `night-role-${next}` as GamePhase };
+  }
+
+  // No more night roles → resolve deaths → day-announce
+  return resolveNight({ ...prev, pendingNightRoles: [] });
+}
+
+function resolveNight(prev: GameState): GameState {
+  const { wolfVictim, savedByWitch, killedByWitch, protectedIndex } = prev.nightResult;
+  const players = [...prev.players];
+  const killed: number[] = [];
+
+  // Wolf victim
+  if (wolfVictim !== null && !savedByWitch && protectedIndex !== wolfVictim) {
+    players[wolfVictim] = { ...players[wolfVictim], alive: false };
+    killed.push(wolfVictim);
+  }
+
+  // Witch death potion
+  if (killedByWitch !== null) {
+    players[killedByWitch] = { ...players[killedByWitch], alive: false };
+    killed.push(killedByWitch);
+  }
+
+  // Cupid: if one lover dies, the other dies too (heartbreak)
+  const { cupidLovers } = prev;
+  if (cupidLovers) {
+    const [a, b] = cupidLovers;
+    const aJustDied = killed.includes(a);
+    const bJustDied = killed.includes(b);
+    if (aJustDied && players[b].alive) {
+      players[b] = { ...players[b], alive: false };
+      killed.push(b);
+    }
+    if (bJustDied && players[a].alive) {
+      players[a] = { ...players[a], alive: false };
+      killed.push(a);
+    }
+  }
+
+  return {
+    ...prev,
+    players,
+    eliminatedToday: killed,
+    phase: 'day-announce',
+    winner: checkWinner(players, prev.cupidLovers),
+  };
 }
 
 function buildInitialState(players: Player[]): GameState {
@@ -45,167 +125,133 @@ function buildInitialState(players: Player[]): GameState {
     witchLifeUsed: false,
     witchDeathUsed: false,
     protectorLastProtected: null,
+    cupidLovers: null,
+    zorroActive: true,
     winner: null,
   };
 }
 
-// ── Helper: pop next alive pending role ────────────────────────
-function advanceNightRole(prev: GameState): GameState {
-  const aliveRoles = new Set(prev.players.filter(p => p.alive).map(p => p.role?.id));
-  let [next, ...remaining] = prev.pendingNightRoles;
-  while (next && !aliveRoles.has(next)) {
-    [next, ...remaining] = remaining;
-  }
-  const phase: GamePhase = next
-    ? (`night-role-${next}` as GamePhase)
-    : 'day-resolve'; // internal: resolve deaths before showing announce
-  return { ...prev, pendingNightRoles: remaining, phase };
-}
-
-// ── Resolve night deaths and move to day-announce ─────────────
-function resolveNight(prev: GameState): GameState {
-  const { wolfVictim, savedByWitch, killedByWitch, protectedIndex } = prev.nightResult;
-  const players = [...prev.players];
-  const killedIndices: number[] = [];
-
-  if (wolfVictim !== null) {
-    const isProtected = protectedIndex === wolfVictim;
-    const isSaved = savedByWitch;
-    if (!isProtected && !isSaved) {
-      players[wolfVictim] = { ...players[wolfVictim], alive: false };
-      killedIndices.push(wolfVictim);
-    }
-  }
-  if (killedByWitch !== null) {
-    players[killedByWitch] = { ...players[killedByWitch], alive: false };
-    killedIndices.push(killedByWitch);
-  }
-
-  return {
-    ...prev,
-    players,
-    eliminatedToday: killedIndices,
-    phase: 'day-announce',
-    winner: checkWinner(players),
-  };
-}
-
-// ═════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────────────────────
+// Hook
+// ─────────────────────────────────────────────────────────────
 export function useGame(initialPlayers: Player[]) {
   const [gs, setGs] = useState<GameState>(() => buildInitialState(initialPlayers));
+  const update = useCallback((fn: (p: GameState) => GameState) => setGs(fn), []);
 
-  const update = useCallback((fn: (prev: GameState) => GameState) => setGs(fn), []);
+  const advance = useCallback((prev: GameState) => advanceNightRole(prev), []);
 
-  // ── Night announce ────────────────────────────────────────
+  // Night announce
   const confirmNightAnnounce = useCallback(() => {
-    update(prev => {
-      const goGirl = prev.isFirstNight && hasRole(prev.players, 'ninia');
-      return { ...prev, phase: goGirl ? 'night-girl-hint' : 'night-wolves' };
-    });
+    update(prev => ({
+      ...prev,
+      phase: prev.isFirstNight && hasRole(prev.players, 'ninia')
+        ? 'night-girl-hint'
+        : 'night-wolves',
+    }));
   }, [update]);
 
-  // ── Girl hint ─────────────────────────────────────────────
+  // Girl hint
   const confirmGirlHint = useCallback(() => {
     update(prev => ({ ...prev, phase: 'night-wolves' }));
   }, [update]);
 
-  // ── Wolves pick victim ────────────────────────────────────
-  const wolvesPickVictim = useCallback((playerIndex: number) => {
-    update(prev => {
-      const nightResult = { ...prev.nightResult, wolfVictim: playerIndex };
-      const next = advanceNightRole({ ...prev, nightResult });
-      // if no pending roles remain, resolve immediately
-      if (next.phase === ('day-resolve' as GamePhase)) return resolveNight(next);
-      return next;
-    });
-  }, [update]);
+  // Wolves pick victim
+  const wolvesPickVictim = useCallback((idx: number) => {
+    update(prev => advance({ ...prev, nightResult: { ...prev.nightResult, wolfVictim: idx } }));
+  }, [update, advance]);
 
-  // ── Vidente ───────────────────────────────────────────────
+  // Vidente
   const confirmVidente = useCallback(() => {
-    update(prev => {
-      const next = advanceNightRole(prev);
-      if (next.phase === ('day-resolve' as GamePhase)) return resolveNight(next);
-      return next;
-    });
-  }, [update]);
+    update(prev => advance(prev));
+  }, [update, advance]);
 
-  // ── Bruja ─────────────────────────────────────────────────
+  // Bruja
   const witchSave = useCallback(() => {
-    update(prev => {
-      const nightResult = { ...prev.nightResult, savedByWitch: true };
-      const next = advanceNightRole({ ...prev, nightResult, witchLifeUsed: true });
-      if (next.phase === ('day-resolve' as GamePhase)) return resolveNight(next);
-      return next;
-    });
-  }, [update]);
+    update(prev => advance({
+      ...prev,
+      nightResult: { ...prev.nightResult, savedByWitch: true },
+      witchLifeUsed: true,
+    }));
+  }, [update, advance]);
 
-  const witchKill = useCallback((playerIndex: number) => {
-    update(prev => {
-      const nightResult = { ...prev.nightResult, killedByWitch: playerIndex };
-      const next = advanceNightRole({ ...prev, nightResult, witchDeathUsed: true });
-      if (next.phase === ('day-resolve' as GamePhase)) return resolveNight(next);
-      return next;
-    });
-  }, [update]);
+  const witchKill = useCallback((idx: number) => {
+    update(prev => advance({
+      ...prev,
+      nightResult: { ...prev.nightResult, killedByWitch: idx },
+      witchDeathUsed: true,
+    }));
+  }, [update, advance]);
 
   const witchPass = useCallback(() => {
-    update(prev => {
-      const next = advanceNightRole(prev);
-      if (next.phase === ('day-resolve' as GamePhase)) return resolveNight(next);
-      return next;
-    });
-  }, [update]);
+    update(prev => advance(prev));
+  }, [update, advance]);
 
-  // ── Protector ─────────────────────────────────────────────
-  const protectorProtect = useCallback((playerIndex: number) => {
-    update(prev => {
-      const nightResult = { ...prev.nightResult, protectedIndex: playerIndex };
-      const next = advanceNightRole({ ...prev, nightResult, protectorLastProtected: playerIndex });
-      if (next.phase === ('day-resolve' as GamePhase)) return resolveNight(next);
-      return next;
-    });
-  }, [update]);
+  // Protector
+  const protectorProtect = useCallback((idx: number) => {
+    update(prev => advance({
+      ...prev,
+      nightResult: { ...prev.nightResult, protectedIndex: idx },
+      protectorLastProtected: idx,
+    }));
+  }, [update, advance]);
 
-  // ── Skip any night role ───────────────────────────────────
+  // Cupido: choose two lovers
+  const cupidSetLovers = useCallback((a: number, b: number) => {
+    update(prev => advance({ ...prev, cupidLovers: [a, b] }));
+  }, [update, advance]);
+
+  // Zorro: advance + mark power loss if no wolf found
+  const zorroCheck = useCallback((centerIdx: number, hadWolf: boolean) => {
+    update(prev => advance({
+      ...prev,
+      zorroActive: hadWolf ? prev.zorroActive : false,
+    }));
+  }, [update, advance]);
+
   const skipNightRole = useCallback(() => {
-    update(prev => {
-      const next = advanceNightRole(prev);
-      if (next.phase === ('day-resolve' as GamePhase)) return resolveNight(next);
-      return next;
-    });
-  }, [update]);
+    update(prev => advance(prev));
+  }, [update, advance]);
 
-  // ── Day: start debate ─────────────────────────────────────
+  // Day: debate → vote
   const startDebate = useCallback(() => {
     update(prev => ({ ...prev, phase: 'day-debate' }));
   }, [update]);
 
-  // ── Day: start vote ───────────────────────────────────────
   const startVote = useCallback(() => {
     update(prev => ({ ...prev, phase: 'day-vote', lynchCandidate: null }));
   }, [update]);
 
-  // ── Day: select + confirm lynch ───────────────────────────
-  const selectLynch = useCallback((playerIndex: number) => {
-    update(prev => ({ ...prev, lynchCandidate: playerIndex }));
-  }, [update]);
-
-  const confirmLynch = useCallback(() => {
+  // Lynch: atomic select + confirm to avoid double-render race
+  const confirmLynch = useCallback((idx: number) => {
     update(prev => {
-      if (prev.lynchCandidate === null) return prev;
       const players = [...prev.players];
-      players[prev.lynchCandidate] = { ...players[prev.lynchCandidate], alive: false };
+      players[idx] = { ...players[idx], alive: false };
+
+      // Cupid heartbreak on lynch
+      let extraKilled: number[] = [];
+      if (prev.cupidLovers) {
+        const [a, b] = prev.cupidLovers;
+        if (idx === a && players[b].alive) {
+          players[b] = { ...players[b], alive: false };
+          extraKilled = [b];
+        }
+        if (idx === b && players[a].alive) {
+          players[a] = { ...players[a], alive: false };
+          extraKilled = [a];
+        }
+      }
+
       return {
         ...prev,
         players,
-        eliminatedToday: [prev.lynchCandidate],
+        lynchCandidate: idx,
+        eliminatedToday: [idx, ...extraKilled],
         phase: 'day-eliminate',
-        winner: checkWinner(players),
+        winner: checkWinner(players, prev.cupidLovers),
       };
     });
   }, [update]);
 
-  // ── Day: no lynch ─────────────────────────────────────────
   const skipLynch = useCallback(() => {
     update(prev => ({
       ...prev,
@@ -215,23 +261,19 @@ export function useGame(initialPlayers: Player[]) {
     }));
   }, [update]);
 
-  // ── Start next night ──────────────────────────────────────
+  // Next night
   const nextNight = useCallback(() => {
-    update(prev => {
-      const round = prev.round + 1;
-      const pending = buildPendingRoles(prev.players, false);
-      return {
-        ...prev,
-        round,
-        isFirstNight: false,
-        phase: 'night-announce',
-        nightResult: emptyNightResult(),
-        pendingNightRoles: pending,
-        eliminatedToday: [],
-        lynchCandidate: null,
-        winner: checkWinner(prev.players),
-      };
-    });
+    update(prev => ({
+      ...prev,
+      round: prev.round + 1,
+      isFirstNight: false,
+      phase: 'night-announce',
+      nightResult: emptyNightResult(),
+      pendingNightRoles: buildPendingRoles(prev.players, false),
+      eliminatedToday: [],
+      lynchCandidate: null,
+      winner: checkWinner(prev.players, prev.cupidLovers),
+    }));
   }, [update]);
 
   return {
@@ -242,10 +284,11 @@ export function useGame(initialPlayers: Player[]) {
     confirmVidente,
     witchSave, witchKill, witchPass,
     protectorProtect,
+    cupidSetLovers,
+    zorroCheck,
     skipNightRole,
     startDebate,
     startVote,
-    selectLynch,
     confirmLynch,
     skipLynch,
     nextNight,

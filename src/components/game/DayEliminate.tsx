@@ -6,14 +6,112 @@ import type { Player } from '../../types';
 interface Props {
   players: Player[];
   eliminatedToday: number[];
-  winner: 'villagers' | 'wolves' | null;
+  winner: 'villagers' | 'wolves' | 'lovers' | null;
+  cupidLovers: [number, number] | null;
   round: number;
   onNextNight: () => void;
   onRestart: () => void;
 }
 
-export function DayEliminate({ players, eliminatedToday, winner, round, onNextNight, onRestart }: Props) {
+const WOLF_IDS = new Set(['lobo', 'feroz', 'padre', 'albino', 'perrolobo']);
+
+const faceStyle: React.CSSProperties = {
+  position: 'absolute', inset: 0,
+  borderRadius: '10px',
+  backfaceVisibility: 'hidden',
+  WebkitBackfaceVisibility: 'hidden',
+  overflow: 'hidden',
+};
+
+// ── Win screen ────────────────────────────────────────────────
+function WinScreen({
+  players, winner, cupidLovers, onRestart,
+}: {
+  players: Player[];
+  winner: 'villagers' | 'wolves' | 'lovers';
+  cupidLovers: [number, number] | null;
+  onRestart: () => void;
+}) {
+  const cfg = {
+    villagers: { icon: '🏘️', color: '#7ab87a', title: '¡El pueblo triunfa!',   sub: 'La luz vence a las tinieblas. Castronegro sobrevive.' },
+    wolves:    { icon: '🐺', color: '#e05555', title: '¡Los Lobos ganan!',       sub: 'La oscuridad se adueña de Castronegro para siempre.' },
+    lovers:    { icon: '❤️', color: '#e05555', title: '¡Los enamorados ganan!',  sub: 'El amor todo lo puede, incluso sobrevivir a Castronegro.' },
+  }[winner];
+
+  return (
+    <PhaseShell
+      icon={cfg.icon}
+      label="Fin de la partida"
+      labelColor={cfg.color}
+      title={cfg.title}
+      subtitle={cfg.sub}
+    >
+      {winner === 'lovers' && cupidLovers && (
+        <div style={{
+          background: 'rgba(139,0,0,.15)', border: '1px solid rgba(224,85,85,.3)',
+          borderRadius: '8px', padding: '16px 28px',
+          fontFamily: "'Cinzel Decorative', serif", fontSize: '.85rem', color: '#e05555',
+        }}>
+          ❤️ {players[cupidLovers[0]]?.name} &amp; {players[cupidLovers[1]]?.name}
+        </div>
+      )}
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+        gap: '10px', width: '100%', maxWidth: '680px',
+      }}>
+        {players.map(p => (
+          <div key={p.index} style={{
+            background: p.alive ? 'rgba(10,6,8,.85)' : 'rgba(0,0,0,.4)',
+            border: `1px solid ${p.alive ? 'rgba(201,168,76,.25)' : 'rgba(255,255,255,.06)'}`,
+            borderRadius: '8px', padding: '12px 8px',
+            opacity: p.alive ? 1 : 0.4, textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '1.6rem', marginBottom: '4px' }}>{p.role?.icon ?? '❓'}</div>
+            <div style={{
+              fontFamily: "'Cinzel Decorative', serif", fontSize: '.68rem',
+              color: p.role?.group === 'wolf' ? '#e05555' : 'var(--gold)',
+              marginBottom: '4px',
+            }}>
+              {p.role?.name ?? '?'}
+            </div>
+            <div style={{ fontSize: '.88rem', color: p.alive ? 'var(--moon)' : 'rgba(245,230,200,.4)' }}>
+              {p.name}
+            </div>
+            {cupidLovers && (cupidLovers[0] === p.index || cupidLovers[1] === p.index) && (
+              <div style={{ fontSize: '.7rem', color: '#e05555', marginTop: '3px' }}>❤️</div>
+            )}
+            {!p.alive && (
+              <div style={{ fontSize: '.68rem', color: 'rgba(245,230,200,.3)', marginTop: '3px' }}>eliminado</div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <Button variant="primary" style={{ marginTop: '16px' }} onClick={onRestart}>
+        ↺ Nueva partida
+      </Button>
+    </PhaseShell>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────
+export function DayEliminate({
+  players, eliminatedToday, winner, cupidLovers, round, onNextNight, onRestart,
+}: Props) {
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
+
+  if (winner) {
+    return (
+      <WinScreen
+        players={players}
+        winner={winner}
+        cupidLovers={cupidLovers}
+        onRestart={onRestart}
+      />
+    );
+  }
 
   const eliminated = eliminatedToday.map(i => players[i]).filter(Boolean);
 
@@ -25,48 +123,8 @@ export function DayEliminate({ players, eliminatedToday, winner, round, onNextNi
     });
   }
 
-  if (winner) {
-    return (
-      <PhaseShell
-        icon={winner === 'wolves' ? '🐺' : '🏘️'}
-        label="Fin de la partida"
-        labelColor={winner === 'wolves' ? '#e05555' : '#7ab87a'}
-        title={winner === 'wolves' ? '¡Los Hombres Lobo ganan!' : '¡El pueblo triunfa!'}
-        subtitle={winner === 'wolves'
-          ? 'La oscuridad se adueña de Castronegro para siempre.'
-          : 'La luz vence a las tinieblas. Castronegro sobrevive.'}
-      >
-        {/* Show all surviving players with roles */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
-          gap: '12px', width: '100%', maxWidth: '680px',
-        }}>
-          {players.map(p => (
-            <div key={p.index} style={{
-              background: p.alive ? 'rgba(10,6,8,.85)' : 'rgba(0,0,0,.4)',
-              border: `1px solid ${p.alive ? 'rgba(201,168,76,.25)' : 'rgba(255,255,255,.06)'}`,
-              borderRadius: '8px', padding: '14px 10px',
-              opacity: p.alive ? 1 : 0.45,
-              textAlign: 'center',
-            }}>
-              <div style={{ fontSize: '1.8rem', marginBottom: '6px' }}>{p.role?.icon ?? '❓'}</div>
-              <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '.72rem', color: 'var(--gold)', marginBottom: '4px' }}>
-                {p.role?.name}
-              </div>
-              <div style={{ fontSize: '.9rem', color: p.alive ? 'var(--moon)' : 'rgba(245,230,200,.4)' }}>
-                {p.name}
-              </div>
-              {!p.alive && <div style={{ fontSize: '.7rem', color: 'rgba(245,230,200,.3)', marginTop: '4px' }}>eliminado</div>}
-            </div>
-          ))}
-        </div>
-
-        <Button variant="primary" style={{ marginTop: '16px' }} onClick={onRestart}>
-          ↺ Nueva partida
-        </Button>
-      </PhaseShell>
-    );
+  function isLover(idx: number) {
+    return cupidLovers ? cupidLovers.includes(idx as 0 | 1) || cupidLovers[0] === idx || cupidLovers[1] === idx : false;
   }
 
   return (
@@ -77,13 +135,14 @@ export function DayEliminate({ players, eliminatedToday, winner, round, onNextNi
       title={eliminated.length === 0 ? 'Sin linchamiento' : 'Carta revelada'}
       subtitle={eliminated.length === 0
         ? 'El pueblo no llegó a un acuerdo. Nadie fue linchado hoy.'
-        : 'El eliminado revela su rol ante todos.'}
+        : 'Toca para revelar el rol del eliminado.'}
       round={round}
     >
       {eliminated.length > 0 && (
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
           {eliminated.map(p => {
-            const isRevealed = revealed.has(p.index);
+            const isFlipped = revealed.has(p.index);
+            const isWolf = p.role ? WOLF_IDS.has(p.role.id) : false;
             return (
               <div
                 key={p.index}
@@ -91,12 +150,12 @@ export function DayEliminate({ players, eliminatedToday, winner, round, onNextNi
                 onClick={() => toggleReveal(p.index)}
               >
                 <div style={{
-                  width: '100%', height: '260px',
-                  position: 'relative', transformStyle: 'preserve-3d',
+                  width: '100%', height: '265px', position: 'relative',
+                  transformStyle: 'preserve-3d',
                   transition: 'transform .6s cubic-bezier(.4,0,.2,1)',
-                  transform: isRevealed ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                  transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
                 }}>
-                  {/* Back */}
+                  {/* Card back */}
                   <div style={{
                     ...faceStyle,
                     background: 'linear-gradient(135deg, #1a0a10, #0d0507)',
@@ -104,32 +163,46 @@ export function DayEliminate({ players, eliminatedToday, winner, round, onNextNi
                     display: 'flex', flexDirection: 'column',
                     alignItems: 'center', justifyContent: 'center', gap: '10px',
                   }}>
-                    <div style={{ fontSize: '3rem', opacity: .4 }}>⚰️</div>
+                    <div style={{ fontSize: '3rem', opacity: .35 }}>⚰️</div>
                     <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '.62rem', color: 'rgba(201,168,76,.4)', letterSpacing: '.1em' }}>
-                      TAP PARA REVELAR
+                      TOCA PARA REVELAR
                     </div>
                     <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '.8rem', color: 'rgba(245,230,200,.6)' }}>
                       {p.name}
                     </div>
+                    {isLover(p.index) && (
+                      <div style={{ fontSize: '.75rem', color: '#e05555' }}>❤️ enamorado/a</div>
+                    )}
                   </div>
 
-                  {/* Front */}
+                  {/* Card front */}
                   <div style={{
                     ...faceStyle,
                     transform: 'rotateY(180deg)',
                     background: '#0d0507',
-                    border: `2px solid ${p.role?.group === 'wolf' ? 'rgba(224,85,85,.5)' : 'rgba(201,168,76,.4)'}`,
+                    border: `2px solid ${isWolf ? 'rgba(224,85,85,.5)' : 'rgba(201,168,76,.4)'}`,
                     display: 'flex', flexDirection: 'column',
-                    alignItems: 'center', justifyContent: 'center', gap: '10px',
+                    alignItems: 'center', justifyContent: 'center', gap: '8px',
+                    padding: '12px',
                   }}>
-                    <div style={{ fontSize: '4rem' }}>{p.role?.icon ?? '❓'}</div>
-                    <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '.72rem', color: p.role?.group === 'wolf' ? '#e05555' : 'var(--gold)' }}>
-                      {p.role?.name}
+                    <div style={{ fontSize: '3.5rem' }}>{p.role?.icon ?? '❓'}</div>
+                    <div style={{
+                      fontFamily: "'Cinzel Decorative', serif",
+                      fontSize: '.72rem',
+                      color: isWolf ? '#e05555' : 'var(--gold)',
+                    }}>
+                      {p.role?.name ?? '?'}
                     </div>
-                    <div style={{ fontSize: '.85rem', color: 'rgba(245,230,200,.7)' }}>{p.name}</div>
-                    <div style={{ fontSize: '.72rem', color: 'rgba(245,230,200,.4)', padding: '0 12px', textAlign: 'center', lineHeight: 1.4 }}>
+                    <div style={{ fontSize: '.85rem', color: 'rgba(245,230,200,.8)' }}>{p.name}</div>
+                    <div style={{
+                      fontSize: '.7rem', color: 'rgba(245,230,200,.5)',
+                      textAlign: 'center', lineHeight: 1.4,
+                    }}>
                       {p.role?.desc}
                     </div>
+                    {isLover(p.index) && (
+                      <div style={{ fontSize: '.75rem', color: '#e05555', marginTop: '2px' }}>❤️ enamorado/a</div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -144,11 +217,3 @@ export function DayEliminate({ players, eliminatedToday, winner, round, onNextNi
     </PhaseShell>
   );
 }
-
-const faceStyle: React.CSSProperties = {
-  position: 'absolute', inset: 0,
-  borderRadius: '10px',
-  backfaceVisibility: 'hidden',
-  WebkitBackfaceVisibility: 'hidden',
-  overflow: 'hidden',
-};

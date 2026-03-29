@@ -11,41 +11,50 @@ interface Props {
 
 export function DayDebate({ round, onEndDebate }: Props) {
   const [seconds, setSeconds] = useState(INITIAL_SECONDS);
-  const [running, setRunning] = useState(true);
+  const [paused, setPaused] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const start = useCallback(() => {
-    if (intervalRef.current) return;
+  // start/stop interval based on paused state
+  useEffect(() => {
+    if (paused) {
+      if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
+      return;
+    }
+    if (seconds <= 0) return;
     intervalRef.current = setInterval(() => {
       setSeconds(s => {
-        if (s <= 1) { clearInterval(intervalRef.current!); intervalRef.current = null; setRunning(false); return 0; }
+        if (s <= 1) {
+          clearInterval(intervalRef.current!);
+          intervalRef.current = null;
+          return 0;
+        }
         return s - 1;
       });
     }, 1000);
-  }, []);
-
-  const pause = useCallback(() => {
-    if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
-    setRunning(false);
-  }, []);
+    return () => { if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; } };
+  }, [paused]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggle = useCallback(() => {
-    running ? pause() : (() => { setRunning(true); start(); })();
-  }, [running, pause, start]);
+    if (seconds <= 0) return;
+    setPaused(p => !p);
+  }, [seconds]);
 
   const addTime = useCallback(() => {
     setSeconds(s => s + 30);
-    if (!running) { setRunning(true); start(); }
-  }, [running, start]);
-
-  // auto-start
-  useEffect(() => { start(); return () => { if (intervalRef.current) clearInterval(intervalRef.current); }; }, [start]);
+    setPaused(false);
+  }, []);
 
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  const pct = (seconds / INITIAL_SECONDS) * 100;
-  const urgent = seconds <= 30;
-  const timerColor = seconds === 0 ? '#e05555' : urgent ? '#f39c12' : 'var(--gold)';
+  const pct  = Math.max(0, (seconds / INITIAL_SECONDS) * 100);
+
+  const timerColor = seconds === 0 ? '#e05555'
+    : seconds <= 30 ? '#f39c12'
+    : 'var(--gold)';
+
+  const statusText = seconds === 0 ? 'TIEMPO'
+    : paused ? 'PAUSADO'
+    : 'TAP PARA PAUSAR';
 
   return (
     <PhaseShell
@@ -56,8 +65,11 @@ export function DayDebate({ round, onEndDebate }: Props) {
       subtitle="Acusen, defiendan, deduzcan. El tiempo corre."
       round={round}
     >
-      {/* Timer circle */}
-      <div style={{ position: 'relative', width: '160px', height: '160px', cursor: 'pointer' }} onClick={toggle}>
+      {/* Circular timer */}
+      <div
+        style={{ position: 'relative', width: '160px', height: '160px', cursor: seconds > 0 ? 'pointer' : 'default' }}
+        onClick={toggle}
+      >
         <svg width="160" height="160" style={{ transform: 'rotate(-90deg)' }}>
           <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,.06)" strokeWidth="8" />
           <circle
@@ -67,25 +79,23 @@ export function DayDebate({ round, onEndDebate }: Props) {
             strokeLinecap="round"
             strokeDasharray={`${2 * Math.PI * 70}`}
             strokeDashoffset={`${2 * Math.PI * 70 * (1 - pct / 100)}`}
-            style={{ transition: 'stroke-dashoffset 1s linear, stroke .5s' }}
+            style={{ transition: 'stroke-dashoffset 1s linear, stroke .4s' }}
           />
         </svg>
         <div style={{
           position: 'absolute', inset: 0,
           display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          gap: '2px',
+          alignItems: 'center', justifyContent: 'center', gap: '2px',
         }}>
           <div style={{
             fontFamily: "'Cinzel Decorative', serif",
             fontSize: '2rem', color: timerColor,
-            transition: 'color .5s',
-            lineHeight: 1,
+            transition: 'color .4s', lineHeight: 1,
           }}>
             {mins}:{String(secs).padStart(2, '0')}
           </div>
-          <div style={{ fontSize: '.65rem', color: 'rgba(245,230,200,.4)', letterSpacing: '.1em' }}>
-            {running ? 'TAP PARA PAUSAR' : seconds === 0 ? 'TIEMPO' : 'PAUSADO'}
+          <div style={{ fontSize: '.62rem', color: 'rgba(245,230,200,.4)', letterSpacing: '.1em' }}>
+            {statusText}
           </div>
         </div>
       </div>
@@ -95,7 +105,7 @@ export function DayDebate({ round, onEndDebate }: Props) {
           background: 'rgba(224,85,85,.1)', border: '1px solid rgba(224,85,85,.3)',
           borderRadius: '8px', padding: '12px 24px',
           fontFamily: "'Cinzel Decorative', serif", fontSize: '.85rem', color: '#e05555',
-          animation: 'pulse 1s infinite',
+          animation: 'pulse 1.2s infinite',
         }}>
           ⏰ ¡Tiempo agotado! Es hora de votar.
         </div>
@@ -103,10 +113,10 @@ export function DayDebate({ round, onEndDebate }: Props) {
 
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
         <Button variant="ghost" onClick={addTime}>
-          +30 segundos
+          +30 seg
         </Button>
         <Button variant="primary" onClick={onEndDebate}>
-          Terminar debate → Votar
+          Ir a votar →
         </Button>
       </div>
     </PhaseShell>
