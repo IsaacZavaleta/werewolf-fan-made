@@ -137,6 +137,6 @@ function potionBtn(color: string, bg: string, border: string): React.CSSProperti
     background: bg, border: `1px solid ${border}`,
     borderRadius: '8px', padding: '14px 20px',
     cursor: 'pointer', transition: 'all .2s', textAlign: 'left',
-    color: 'var(--moon)', fontFamily: "'Crimson Text', serif",
+    color, fontFamily: "'Crimson Text', serif",
   };
 }

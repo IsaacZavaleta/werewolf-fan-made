@@ -201,7 +201,7 @@ export function useGame(initialPlayers: Player[]) {
   }, [update, advance]);
 
   // Zorro: advance + mark power loss if no wolf found
-  const zorroCheck = useCallback((centerIdx: number, hadWolf: boolean) => {
+  const zorroCheck = useCallback((_centerIdx: number, hadWolf: boolean) => {
     update(prev => advance({
       ...prev,
       zorroActive: hadWolf ? prev.zorroActive : false,
