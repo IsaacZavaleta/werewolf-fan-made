@@ -41,9 +41,11 @@ export type GamePhase =
   | 'night-role-cupido'
   | 'night-role-zorro'
   | 'day-announce'
+  | 'day-hunter-night'   // cazador muerto de noche dispara antes del debate
   | 'day-debate'
   | 'day-vote'
-  | 'day-eliminate';
+  | 'day-eliminate'
+  | 'day-hunter-day';    // cazador linchado dispara tras revelar carta
 
 export interface NightResult {
   wolfVictim: number | null;
@@ -64,10 +66,9 @@ export interface GameState {
   witchLifeUsed: boolean;
   witchDeathUsed: boolean;
   protectorLastProtected: number | null;
-  // Cupido state
-  cupidLovers: [number, number] | null;   // indices of the two lovers
-  // Zorro state
-  zorroActive: boolean;                    // loses power if first guess was wrong
-  // Winner
+  cupidLovers: [number, number] | null;
+  zorroActive: boolean;
+  // Cazador: índice del cazador que acaba de morir y aún no disparó
+  pendingHunterShot: number | null;
   winner: 'villagers' | 'wolves' | 'lovers' | null;
 }

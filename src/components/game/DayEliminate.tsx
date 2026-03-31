@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { PhaseShell } from './PhaseShell';
 import { Button } from '../shared/Button';
+import { HunterShot } from './HunterShot';
 import type { Player } from '../../types';
 
 interface Props {
@@ -8,7 +9,9 @@ interface Props {
   eliminatedToday: number[];
   winner: 'villagers' | 'wolves' | 'lovers' | null;
   cupidLovers: [number, number] | null;
+  pendingHunterShot: number | null;
   round: number;
+  onHunterShoot: (targetIdx: number) => void;
   onNextNight: () => void;
   onRestart: () => void;
 }
@@ -16,46 +19,34 @@ interface Props {
 const WOLF_IDS = new Set(['lobo', 'feroz', 'padre', 'albino', 'perrolobo']);
 
 const faceStyle: React.CSSProperties = {
-  position: 'absolute', inset: 0,
-  borderRadius: '10px',
-  backfaceVisibility: 'hidden',
-  WebkitBackfaceVisibility: 'hidden',
-  overflow: 'hidden',
+  position: 'absolute', inset: 0, borderRadius: '10px',
+  backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', overflow: 'hidden',
 };
 
 // ── Win screen ────────────────────────────────────────────────
-function WinScreen({
-  players, winner, cupidLovers, onRestart,
-}: {
+function WinScreen({ players, winner, cupidLovers, onRestart }: {
   players: Player[];
   winner: 'villagers' | 'wolves' | 'lovers';
   cupidLovers: [number, number] | null;
   onRestart: () => void;
 }) {
   const cfg = {
-    villagers: { icon: '🏘️', color: '#7ab87a', title: '¡El pueblo triunfa!',   sub: 'La luz vence a las tinieblas. Castronegro sobrevive.' },
-    wolves:    { icon: '🐺', color: '#e05555', title: '¡Los Lobos ganan!',       sub: 'La oscuridad se adueña de Castronegro para siempre.' },
-    lovers:    { icon: '❤️', color: '#e05555', title: '¡Los enamorados ganan!',  sub: 'El amor todo lo puede, incluso sobrevivir a Castronegro.' },
+    villagers: { icon: '🏘️', color: '#7ab87a', title: '¡El pueblo triunfa!',  sub: 'La luz vence a las tinieblas. Castronegro sobrevive.' },
+    wolves:    { icon: '🐺', color: '#e05555', title: '¡Los Lobos ganan!',      sub: 'La oscuridad se adueña de Castronegro para siempre.' },
+    lovers:    { icon: '❤️', color: '#e05555', title: '¡Los enamorados ganan!', sub: 'El amor todo lo puede, incluso en Castronegro.' },
   }[winner];
 
   return (
-    <PhaseShell
-      icon={cfg.icon}
-      label="Fin de la partida"
-      labelColor={cfg.color}
-      title={cfg.title}
-      subtitle={cfg.sub}
-    >
+    <PhaseShell icon={cfg.icon} label="Fin de la partida" labelColor={cfg.color} title={cfg.title} subtitle={cfg.sub}>
       {winner === 'lovers' && cupidLovers && (
         <div style={{
           background: 'rgba(139,0,0,.15)', border: '1px solid rgba(224,85,85,.3)',
-          borderRadius: '8px', padding: '16px 28px',
+          borderRadius: '8px', padding: '14px 28px',
           fontFamily: "'Cinzel Decorative', serif", fontSize: '.85rem', color: '#e05555',
         }}>
           ❤️ {players[cupidLovers[0]]?.name} &amp; {players[cupidLovers[1]]?.name}
         </div>
       )}
-
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
@@ -65,66 +56,108 @@ function WinScreen({
           <div key={p.index} style={{
             background: p.alive ? 'rgba(10,6,8,.85)' : 'rgba(0,0,0,.4)',
             border: `1px solid ${p.alive ? 'rgba(201,168,76,.25)' : 'rgba(255,255,255,.06)'}`,
-            borderRadius: '8px', padding: '12px 8px',
-            opacity: p.alive ? 1 : 0.4, textAlign: 'center',
+            borderRadius: '8px', padding: '12px 8px', opacity: p.alive ? 1 : 0.4, textAlign: 'center',
           }}>
             <div style={{ fontSize: '1.6rem', marginBottom: '4px' }}>{p.role?.icon ?? '❓'}</div>
-            <div style={{
-              fontFamily: "'Cinzel Decorative', serif", fontSize: '.68rem',
-              color: p.role?.group === 'wolf' ? '#e05555' : 'var(--gold)',
-              marginBottom: '4px',
-            }}>
+            <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '.68rem', color: p.role?.group === 'wolf' ? '#e05555' : 'var(--gold)', marginBottom: '4px' }}>
               {p.role?.name ?? '?'}
             </div>
-            <div style={{ fontSize: '.88rem', color: p.alive ? 'var(--moon)' : 'rgba(245,230,200,.4)' }}>
-              {p.name}
-            </div>
+            <div style={{ fontSize: '.88rem', color: p.alive ? 'var(--moon)' : 'rgba(245,230,200,.4)' }}>{p.name}</div>
             {cupidLovers && (cupidLovers[0] === p.index || cupidLovers[1] === p.index) && (
               <div style={{ fontSize: '.7rem', color: '#e05555', marginTop: '3px' }}>❤️</div>
             )}
-            {!p.alive && (
-              <div style={{ fontSize: '.68rem', color: 'rgba(245,230,200,.3)', marginTop: '3px' }}>eliminado</div>
-            )}
+            {!p.alive && <div style={{ fontSize: '.68rem', color: 'rgba(245,230,200,.3)', marginTop: '3px' }}>eliminado</div>}
           </div>
         ))}
       </div>
-
-      <Button variant="primary" style={{ marginTop: '16px' }} onClick={onRestart}>
-        ↺ Nueva partida
-      </Button>
+      <Button variant="primary" style={{ marginTop: '16px' }} onClick={onRestart}>↺ Nueva partida</Button>
     </PhaseShell>
   );
 }
 
-// ── Main component ────────────────────────────────────────────
+// ── Flip card ────────────────────────────────────────────────
+function FlipCard({ p, isLover }: { p: Player; isLover: boolean }) {
+  const [flipped, setFlipped] = useState(false);
+  const isWolf = p.role ? WOLF_IDS.has(p.role.id) : false;
+
+  return (
+    <div style={{ width: '180px', perspective: '700px', cursor: 'pointer' }} onClick={() => setFlipped(v => !v)}>
+      <div style={{
+        width: '100%', height: '265px', position: 'relative',
+        transformStyle: 'preserve-3d',
+        transition: 'transform .6s cubic-bezier(.4,0,.2,1)',
+        transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+      }}>
+        {/* Back */}
+        <div style={{
+          ...faceStyle,
+          background: 'linear-gradient(135deg, #1a0a10, #0d0507)',
+          border: '2px solid rgba(201,168,76,.2)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px',
+        }}>
+          <div style={{ fontSize: '3rem', opacity: .35 }}>⚰️</div>
+          <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '.62rem', color: 'rgba(201,168,76,.4)', letterSpacing: '.1em' }}>
+            TOCA PARA REVELAR
+          </div>
+          <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '.8rem', color: 'rgba(245,230,200,.6)' }}>
+            {p.name}
+          </div>
+          {isLover && <div style={{ fontSize: '.75rem', color: '#e05555' }}>❤️ enamorado/a</div>}
+        </div>
+
+        {/* Front */}
+        <div style={{
+          ...faceStyle, transform: 'rotateY(180deg)',
+          background: '#0d0507',
+          border: `2px solid ${isWolf ? 'rgba(224,85,85,.5)' : 'rgba(201,168,76,.4)'}`,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px',
+        }}>
+          <div style={{ fontSize: '3.5rem' }}>{p.role?.icon ?? '❓'}</div>
+          <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '.72rem', color: isWolf ? '#e05555' : 'var(--gold)' }}>
+            {p.role?.name ?? '?'}
+          </div>
+          <div style={{ fontSize: '.85rem', color: 'rgba(245,230,200,.8)' }}>{p.name}</div>
+          <div style={{ fontSize: '.7rem', color: 'rgba(245,230,200,.5)', textAlign: 'center', lineHeight: 1.4 }}>
+            {p.role?.desc}
+          </div>
+          {isLover && <div style={{ fontSize: '.75rem', color: '#e05555', marginTop: '2px' }}>❤️ enamorado/a</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main ──────────────────────────────────────────────────────
 export function DayEliminate({
-  players, eliminatedToday, winner, cupidLovers, round, onNextNight, onRestart,
+  players, eliminatedToday, winner, cupidLovers,
+  pendingHunterShot, round, onHunterShoot, onNextNight, onRestart,
 }: Props) {
-  const [revealed, setRevealed] = useState<Set<number>>(new Set());
+  const [cardsRevealed, setCardsRevealed] = useState(false);
 
   if (winner) {
-    return (
-      <WinScreen
-        players={players}
-        winner={winner}
-        cupidLovers={cupidLovers}
-        onRestart={onRestart}
-      />
-    );
+    return <WinScreen players={players} winner={winner} cupidLovers={cupidLovers} onRestart={onRestart} />;
   }
 
   const eliminated = eliminatedToday.map(i => players[i]).filter(Boolean);
 
-  function toggleReveal(idx: number) {
-    setRevealed(prev => {
-      const next = new Set(prev);
-      next.has(idx) ? next.delete(idx) : next.add(idx);
-      return next;
-    });
+  function isLover(idx: number) {
+    return !!cupidLovers && (cupidLovers[0] === idx || cupidLovers[1] === idx);
   }
 
-  function isLover(idx: number) {
-    return cupidLovers ? cupidLovers.includes(idx as 0 | 1) || cupidLovers[0] === idx || cupidLovers[1] === idx : false;
+  // Check if hunter is among the eliminated (day lynch context)
+  const hunterEliminated = pendingHunterShot !== null
+    && eliminatedToday.includes(pendingHunterShot);
+
+  // After cards are shown and hunter needs to fire
+  if (cardsRevealed && hunterEliminated && pendingHunterShot !== null) {
+    return (
+      <HunterShot
+        players={players}
+        hunterIndex={pendingHunterShot}
+        context="day"
+        onShoot={onHunterShoot}
+      />
+    );
   }
 
   return (
@@ -135,85 +168,27 @@ export function DayEliminate({
       title={eliminated.length === 0 ? 'Sin linchamiento' : 'Carta revelada'}
       subtitle={eliminated.length === 0
         ? 'El pueblo no llegó a un acuerdo. Nadie fue linchado hoy.'
-        : 'Toca para revelar el rol del eliminado.'}
+        : 'Toca cada carta para revelar el rol.'}
       round={round}
     >
       {eliminated.length > 0 && (
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          {eliminated.map(p => {
-            const isFlipped = revealed.has(p.index);
-            const isWolf = p.role ? WOLF_IDS.has(p.role.id) : false;
-            return (
-              <div
-                key={p.index}
-                style={{ width: '180px', perspective: '700px', cursor: 'pointer' }}
-                onClick={() => toggleReveal(p.index)}
-              >
-                <div style={{
-                  width: '100%', height: '265px', position: 'relative',
-                  transformStyle: 'preserve-3d',
-                  transition: 'transform .6s cubic-bezier(.4,0,.2,1)',
-                  transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-                }}>
-                  {/* Card back */}
-                  <div style={{
-                    ...faceStyle,
-                    background: 'linear-gradient(135deg, #1a0a10, #0d0507)',
-                    border: '2px solid rgba(201,168,76,.2)',
-                    display: 'flex', flexDirection: 'column',
-                    alignItems: 'center', justifyContent: 'center', gap: '10px',
-                  }}>
-                    <div style={{ fontSize: '3rem', opacity: .35 }}>⚰️</div>
-                    <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '.62rem', color: 'rgba(201,168,76,.4)', letterSpacing: '.1em' }}>
-                      TOCA PARA REVELAR
-                    </div>
-                    <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '.8rem', color: 'rgba(245,230,200,.6)' }}>
-                      {p.name}
-                    </div>
-                    {isLover(p.index) && (
-                      <div style={{ fontSize: '.75rem', color: '#e05555' }}>❤️ enamorado/a</div>
-                    )}
-                  </div>
-
-                  {/* Card front */}
-                  <div style={{
-                    ...faceStyle,
-                    transform: 'rotateY(180deg)',
-                    background: '#0d0507',
-                    border: `2px solid ${isWolf ? 'rgba(224,85,85,.5)' : 'rgba(201,168,76,.4)'}`,
-                    display: 'flex', flexDirection: 'column',
-                    alignItems: 'center', justifyContent: 'center', gap: '8px',
-                    padding: '12px',
-                  }}>
-                    <div style={{ fontSize: '3.5rem' }}>{p.role?.icon ?? '❓'}</div>
-                    <div style={{
-                      fontFamily: "'Cinzel Decorative', serif",
-                      fontSize: '.72rem',
-                      color: isWolf ? '#e05555' : 'var(--gold)',
-                    }}>
-                      {p.role?.name ?? '?'}
-                    </div>
-                    <div style={{ fontSize: '.85rem', color: 'rgba(245,230,200,.8)' }}>{p.name}</div>
-                    <div style={{
-                      fontSize: '.7rem', color: 'rgba(245,230,200,.5)',
-                      textAlign: 'center', lineHeight: 1.4,
-                    }}>
-                      {p.role?.desc}
-                    </div>
-                    {isLover(p.index) && (
-                      <div style={{ fontSize: '.75rem', color: '#e05555', marginTop: '2px' }}>❤️ enamorado/a</div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          {eliminated.map(p => (
+            <FlipCard key={p.index} p={p} isLover={isLover(p.index)} />
+          ))}
         </div>
       )}
 
-      <Button variant="primary" style={{ marginTop: '12px' }} onClick={onNextNight}>
-        🌑 Comenzar siguiente noche
-      </Button>
+      {/* If hunter was lynched, show "hunter fires" button after cards */}
+      {hunterEliminated && !cardsRevealed ? (
+        <Button variant="ghost" style={{ borderColor: '#f39c12', color: '#f39c12' }} onClick={() => setCardsRevealed(true)}>
+          🏹 El Cazador dispara ahora →
+        </Button>
+      ) : (
+        <Button variant="primary" style={{ marginTop: '12px' }} onClick={onNextNight}>
+          🌑 Comenzar siguiente noche
+        </Button>
+      )}
     </PhaseShell>
   );
 }

@@ -1,19 +1,20 @@
-import { useGame }       from '../../hooks/useGame';
-import type { Player }   from '../../types';
+import { useGame }        from '../../hooks/useGame';
+import type { Player }    from '../../types';
 
-import { StatusBar }     from './StatusBar';
-import { NightAnnounce } from './NightAnnounce';
-import { NightGirlHint } from './NightGirlHint';
-import { NightWolves }   from './NightWolves';
-import { NightVidente }  from './NightVidente';
-import { NightBruja }    from './NightBruja';
-import { NightProtector }from './NightProtector';
-import { NightCupido }   from './NightCupido';
-import { NightZorro }    from './NightZorro';
-import { DayAnnounce }   from './DayAnnounce';
-import { DayDebate }     from './DayDebate';
-import { DayVote }       from './DayVote';
-import { DayEliminate }  from './DayEliminate';
+import { StatusBar }      from './StatusBar';
+import { NightAnnounce }  from './NightAnnounce';
+import { NightGirlHint }  from './NightGirlHint';
+import { NightWolves }    from './NightWolves';
+import { NightVidente }   from './NightVidente';
+import { NightBruja }     from './NightBruja';
+import { NightProtector } from './NightProtector';
+import { NightCupido }    from './NightCupido';
+import { NightZorro }     from './NightZorro';
+import { DayAnnounce }    from './DayAnnounce';
+import { HunterShot }     from './HunterShot';
+import { DayDebate }      from './DayDebate';
+import { DayVote }        from './DayVote';
+import { DayEliminate }   from './DayEliminate';
 
 interface Props {
   players: Player[];
@@ -27,11 +28,12 @@ export function GamePage({ players, onRestart }: Props) {
     confirmGirlHint,
     wolvesPickVictim,
     confirmVidente,
-    witchSave, witchKill, witchPass,
+    witchAction,
     protectorProtect,
+    skipNightRole,
     cupidSetLovers,
     zorroCheck,
-    skipNightRole,
+    hunterShoot,
     startDebate,
     startVote,
     confirmLynch,
@@ -41,18 +43,18 @@ export function GamePage({ players, onRestart }: Props) {
 
   const {
     phase, players: gp, round,
-    nightResult,
     witchLifeUsed, witchDeathUsed,
     protectorLastProtected,
     cupidLovers, zorroActive,
     eliminatedToday, winner,
+    pendingHunterShot,
   } = gs;
 
   function getName(roleId: string) {
     return gp.find(p => p.alive && p.role?.id === roleId)?.name ?? roleId;
   }
 
-  const screenContent = (() => {
+  const screen = (() => {
     // ── Night ────────────────────────────────────────────────
     if (phase === 'night-announce')
       return <NightAnnounce round={round} onConfirm={confirmNightAnnounce} />;
@@ -77,12 +79,9 @@ export function GamePage({ players, onRestart }: Props) {
         <NightBruja
           players={gp}
           brujaName={getName('bruja')}
-          wolfVictim={nightResult.wolfVictim}
           lifeUsed={witchLifeUsed}
           deathUsed={witchDeathUsed}
-          onSave={witchSave}
-          onKill={witchKill}
-          onPass={witchPass}
+          onAction={witchAction}
         />
       );
 
@@ -113,8 +112,19 @@ export function GamePage({ players, onRestart }: Props) {
           players={gp}
           zorroName={getName('zorro')}
           zorroActive={zorroActive}
-          onConfirm={(centerIdx, hadWolf) => zorroCheck(centerIdx, hadWolf)}
+          onConfirm={zorroCheck}
           onSkip={skipNightRole}
+        />
+      );
+
+    // ── Cazador muerto de noche — dispara antes del debate ───
+    if (phase === 'day-hunter-night' && pendingHunterShot !== null)
+      return (
+        <HunterShot
+          players={gp}
+          hunterIndex={pendingHunterShot}
+          context="night"
+          onShoot={hunterShoot}
         />
       );
 
@@ -151,7 +161,9 @@ export function GamePage({ players, onRestart }: Props) {
           eliminatedToday={eliminatedToday}
           winner={winner}
           cupidLovers={cupidLovers}
+          pendingHunterShot={pendingHunterShot}
           round={round}
+          onHunterShoot={hunterShoot}
           onNextNight={nextNight}
           onRestart={onRestart}
         />
@@ -169,10 +181,7 @@ export function GamePage({ players, onRestart }: Props) {
         phase={phase}
         cupidLovers={cupidLovers}
       />
-      {/* Padding top so content clears the fixed StatusBar */}
-      <div style={{ paddingTop: '48px' }}>
-        {screenContent}
-      </div>
+      <div style={{ paddingTop: '48px' }}>{screen}</div>
     </>
   );
 }
