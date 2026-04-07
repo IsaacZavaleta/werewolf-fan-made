@@ -13,7 +13,7 @@ interface Props {
 }
 
 function potionBtn(
-  color: string, bg: string, border: string, active: boolean,
+  color: string, bg: string, active: boolean,
 ): React.CSSProperties {
   return {
     display: 'flex', alignItems: 'center', gap: '14px',
@@ -81,7 +81,7 @@ export function NightBruja({ players, brujaName, lifeUsed, deathUsed, onAction }
           {!lifeUsed && (
             <button
               onClick={() => setWantsLife(v => !v)}
-              style={potionBtn('#7ab87a', 'rgba(30,80,30,.2)', 'rgba(100,180,100,.3)', wantsLife)}
+              style={potionBtn('#7ab87a', 'rgba(30,80,30,.2)', wantsLife)}
             >
               <span style={{ fontSize: '1.5rem' }}>{wantsLife ? '✅' : '💚'}</span>
               <div>
@@ -101,7 +101,7 @@ export function NightBruja({ players, brujaName, lifeUsed, deathUsed, onAction }
           {!deathUsed && !pickingTarget && (
             <button
               onClick={() => setPickingTarget(true)}
-              style={potionBtn('#e05555', 'rgba(139,0,0,.2)', 'rgba(224,85,85,.3)', killTarget !== null)}
+              style={potionBtn('#e05555', 'rgba(139,0,0,.2)', killTarget !== null)}
             >
               <span style={{ fontSize: '1.5rem' }}>{killTarget !== null ? '✅' : '💀'}</span>
               <div>

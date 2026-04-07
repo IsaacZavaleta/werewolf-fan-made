@@ -1,5 +1,4 @@
 import { PhaseShell } from './PhaseShell';
-import { Button } from '../shared/Button';
 
 interface Props {
   playerName: string;
@@ -25,7 +24,7 @@ export function NightPerroLobo({ playerName, onChoose }: Props) {
       </div>
 
       <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
-        <button onClick={() => onChoose('wolf')} style={sideBtn('#e05555', 'rgba(139,0,0,.2)', 'rgba(224,85,85,.3)')}>
+        <button onClick={() => onChoose('wolf')} style={sideBtn('rgba(139,0,0,.2)', 'rgba(224,85,85,.3)')}>
           <span style={{ fontSize: '2rem' }}>🐺</span>
           <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '.8rem', color: '#e05555' }}>Bando Lobo</div>
           <div style={{ fontSize: '.8rem', color: 'rgba(245,230,200,.55)', lineHeight: 1.4 }}>
@@ -33,7 +32,7 @@ export function NightPerroLobo({ playerName, onChoose }: Props) {
           </div>
         </button>
 
-        <button onClick={() => onChoose('villager')} style={sideBtn('#7ab87a', 'rgba(30,80,30,.2)', 'rgba(100,180,100,.3)')}>
+        <button onClick={() => onChoose('villager')} style={sideBtn('rgba(30,80,30,.2)', 'rgba(100,180,100,.3)')}>
           <span style={{ fontSize: '2rem' }}>🌾</span>
           <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '.8rem', color: '#7ab87a' }}>Bando Aldeano</div>
           <div style={{ fontSize: '.8rem', color: 'rgba(245,230,200,.55)', lineHeight: 1.4 }}>
@@ -45,7 +44,7 @@ export function NightPerroLobo({ playerName, onChoose }: Props) {
   );
 }
 
-function sideBtn(color: string, bg: string, border: string): React.CSSProperties {
+function sideBtn(bg: string, border: string): React.CSSProperties {
   return {
     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
     background: bg, border: `1px solid ${border}`,

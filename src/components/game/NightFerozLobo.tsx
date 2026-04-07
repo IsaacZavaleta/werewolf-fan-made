@@ -11,7 +11,7 @@ interface Props {
   onSkip: () => void;
 }
 
-export function NightFerozLobo({ players, wolfVictim, onConfirm, onSkip }: Props) {
+export function NightFerozLobo({ players, wolfVictim, onConfirm }: Props) {
   const [selected, setSelected] = useState<number | null>(null);
 
   // Feroz can't pick the same victim already chosen (already handled, but mark it)

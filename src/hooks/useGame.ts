@@ -99,7 +99,6 @@ function findAdjacentWolf(
 ): number | null {
   const alive = players.filter(p => p.alive && p.index !== knightIdx);
   if (alive.length === 0) return null;
-  const pos = alive.findIndex(p => p.index === knightIdx);
   // pos = -1 because knight is already dead, so search around original position by index
   const sorted = [...players].filter(p => p.alive).sort((a, b) => a.index - b.index);
   const knightPos = players[knightIdx].index;

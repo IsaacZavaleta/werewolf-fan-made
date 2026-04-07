@@ -32,14 +32,14 @@ export function GamePage({ players, onRestart }: Props) {
   const {
     gs,
     confirmNightAnnounce,
-    confirmGirlHint, confirmGirlHint2,
+    confirmGirlHint2,
     perroLoboChoose,
     cupidSetLovers, confirmGemelas, wildChildPickModel,
     wolvesPickVictim,
     ferozPickVictim, padreInfect, padrePasa,
     confirmVidente, witchAction, protectorProtect, zorroCheck, skipNightRole,
     goAfterAnnounce, hunterShoot, caballeroResolve,
-    startDebate, startVote, confirmLynch, skipLynch,
+    startVote, confirmLynch, skipLynch,
     judgeActivate, judgeSecondVoteConfirm,
     nextNight,
   } = useGame(players);
@@ -47,8 +47,8 @@ export function GamePage({ players, onRestart }: Props) {
   const {
     phase, players: gp, round,
     witchLifeUsed, witchDeathUsed, protectorLastProtected,
-    cupidLovers, zorroActive,
-    nightResult, padreUsed,
+    cupidLovers,
+    nightResult,
     caballeroDied, caballeroAdjacentWolf,
     eliminatedToday, winner, pendingHunterShot,
     judgeUsed,
