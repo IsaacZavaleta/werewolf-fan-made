@@ -8,23 +8,25 @@ interface Props {
   players: Player[];
   round: number;
   cupidLovers: [number, number] | null;
+  judgeAvailable: boolean;   // judge alive and hasn't used power
   onConfirmLynch: (index: number) => void;
   onSkipLynch: () => void;
+  onJudgeActivate: () => void;
 }
 
-export function DayVote({ players, round, cupidLovers, onConfirmLynch, onSkipLynch }: Props) {
+export function DayVote({
+  players, round, cupidLovers,
+  judgeAvailable, onConfirmLynch, onSkipLynch, onJudgeActivate,
+}: Props) {
   const [selected, setSelected] = useState<number | null>(null);
   const [confirming, setConfirming] = useState(false);
 
   const alivePlayers = players.filter(p => p.alive);
   const target = selected !== null ? players[selected] : null;
 
-  // Warn if a lover will die too
   const loverWillDie = selected !== null && cupidLovers
-    ? (cupidLovers[0] === selected && players[cupidLovers[1]]?.alive)
-      || (cupidLovers[1] === selected && players[cupidLovers[0]]?.alive)
+    ? (cupidLovers[0] === selected || cupidLovers[1] === selected)
     : false;
-
   const partnerName = loverWillDie && cupidLovers && selected !== null
     ? players[selected === cupidLovers[0] ? cupidLovers[1] : cupidLovers[0]]?.name
     : null;
@@ -39,8 +41,7 @@ export function DayVote({ players, round, cupidLovers, onConfirmLynch, onSkipLyn
         round={round}
       >
         <div style={{
-          background: 'rgba(139,0,0,.15)',
-          border: '1px solid rgba(224,85,85,.3)',
+          background: 'rgba(139,0,0,.15)', border: '1px solid rgba(224,85,85,.3)',
           borderRadius: '8px', padding: '24px 36px',
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px',
         }}>
@@ -54,8 +55,7 @@ export function DayVote({ players, round, cupidLovers, onConfirmLynch, onSkipLyn
           {loverWillDie && partnerName && (
             <div style={{
               background: 'rgba(139,0,0,.2)', border: '1px solid rgba(224,85,85,.3)',
-              borderRadius: '6px', padding: '10px 20px',
-              fontSize: '.85rem', color: '#e05555',
+              borderRadius: '6px', padding: '10px 20px', fontSize: '.85rem', color: '#e05555',
             }}>
               💔 <strong>{partnerName}</strong> también morirá de amor
             </div>
@@ -81,11 +81,7 @@ export function DayVote({ players, round, cupidLovers, onConfirmLynch, onSkipLyn
       subtitle={`${alivePlayers.length} supervivientes. ¿A quién linchar?`}
       round={round}
     >
-      <PlayerGrid
-        players={players}
-        selected={selected}
-        onSelect={setSelected}
-      />
+      <PlayerGrid players={players} selected={selected} onSelect={setSelected} />
 
       {loverWillDie && partnerName && selected !== null && (
         <div style={{
@@ -93,14 +89,23 @@ export function DayVote({ players, round, cupidLovers, onConfirmLynch, onSkipLyn
           background: 'rgba(139,0,0,.12)', border: '1px solid rgba(224,85,85,.2)',
           borderRadius: '6px', padding: '8px 18px',
         }}>
-          ⚠️ Linchar a <strong>{players[selected].name}</strong> también matará a <strong>{partnerName}</strong> (enamorado/a)
+          ⚠️ Linchar a <strong>{players[selected].name}</strong> también matará a <strong>{partnerName}</strong>
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
-        <Button variant="ghost" onClick={onSkipLynch}>
-          Sin consenso — nadie muere
-        </Button>
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <Button variant="ghost" onClick={onSkipLynch}>Sin consenso</Button>
+
+        {judgeAvailable && (
+          <Button
+            variant="ghost"
+            style={{ borderColor: '#f39c12', color: '#f39c12' }}
+            onClick={onJudgeActivate}
+          >
+            ⚖️ Juez: segundo voto
+          </Button>
+        )}
+
         <Button
           variant="danger"
           disabled={selected === null}

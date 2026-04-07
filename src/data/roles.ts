@@ -184,8 +184,18 @@ export const ROLES: RoleDef[] = [
     max: 1,
     default: 2,
   },
+  {
+    id: 'anciano',
+    name: 'Anciano',
+    group: 'neutral',
+    icon: '🌳',
+    desc: 'Resiste el primer ataque de los lobos sin morir. Si es linchado por el pueblo, todos los roles especiales pierden sus poderes.',
+    max: 1,
+    default: 1,
+  },
 ];
 
 export const ROLES_BY_ID: Record<string, RoleDef> = Object.fromEntries(
   ROLES.map((r) => [r.id, r])
 );
+// Anciano added below via direct append — handled in next step

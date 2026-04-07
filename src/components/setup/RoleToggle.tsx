@@ -1,4 +1,5 @@
 import type { RoleDef } from '../../types';
+import cardImages from '../../data/cardImages';
 
 interface Props {
   role: RoleDef;
@@ -16,42 +17,56 @@ const groupColors: Record<string, string> = {
 
 export function RoleToggle({ role, active, count, onToggle, onCountChange }: Props) {
   const color = groupColors[role.group] ?? 'var(--gold)';
+  const img   = cardImages[role.id];
 
   return (
-    <div
-      style={{
-        background: active ? `rgba(${role.group === 'wolf' ? '139,0,0' : role.group === 'special' ? '74,111,165' : '201,168,76'},.1)` : 'rgba(0,0,0,.5)',
-        border: `1px solid ${active ? color : 'rgba(201,168,76,.18)'}`,
-        borderRadius: '5px',
-        padding: '10px 12px',
-        cursor: 'pointer',
-        transition: 'border-color .2s, background .2s',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '6px',
-        userSelect: 'none',
-      }}
-    >
-      {/* Header row — clicking toggles active */}
-      <div
-        style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-        onClick={onToggle}
-      >
-        <span style={{ fontSize: '1.1rem' }}>{role.icon}</span>
+    <div style={{
+      background: active
+        ? `rgba(${role.group === 'wolf' ? '139,0,0' : role.group === 'special' ? '74,111,165' : '201,168,76'},.1)`
+        : 'rgba(0,0,0,.5)',
+      border: `1px solid ${active ? color : 'rgba(201,168,76,.18)'}`,
+      borderRadius: '5px',
+      cursor: 'pointer',
+      transition: 'border-color .2s, background .2s',
+      overflow: 'hidden',
+      display: 'flex', flexDirection: 'column',
+      userSelect: 'none',
+    }}>
+      {/* Card image thumbnail */}
+      {img && (
+        <div style={{ width: '100%', height: '90px', overflow: 'hidden', flexShrink: 0 }}
+          onClick={onToggle}>
+          <img
+            src={img} alt={role.name}
+            style={{
+              width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top',
+              opacity: active ? 1 : 0.55,
+              transition: 'opacity .2s',
+              display: 'block',
+            }}
+          />
+        </div>
+      )}
+
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px' }}
+        onClick={onToggle}>
+        {!img && <span style={{ fontSize: '1.1rem' }}>{role.icon}</span>}
         <span style={{
-          fontSize: '.82rem',
+          fontSize: '.78rem',
           fontFamily: "'Cinzel Decorative', serif",
           flex: 1,
           color: active ? color : 'var(--moon)',
           transition: 'color .2s',
+          lineHeight: 1.2,
         }}>
           {role.name}
         </span>
       </div>
 
-      {/* Count controls — only visible when active */}
+      {/* Count controls — only when active */}
       {active && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0 10px 10px' }}>
           <button
             onClick={(e) => { e.stopPropagation(); onCountChange(-1); }}
             style={{
@@ -64,11 +79,8 @@ export function RoleToggle({ role, active, count, onToggle, onCountChange }: Pro
           >−</button>
 
           <span style={{
-            fontFamily: "'Cinzel Decorative', serif",
-            fontSize: '.75rem',
-            color: 'var(--moon)',
-            minWidth: '18px',
-            textAlign: 'center',
+            fontFamily: "'Cinzel Decorative', serif", fontSize: '.75rem',
+            color: 'var(--moon)', minWidth: '18px', textAlign: 'center', flex: 1,
           }}>
             {count}
           </span>
@@ -83,8 +95,6 @@ export function RoleToggle({ role, active, count, onToggle, onCountChange }: Pro
               flexShrink: 0, lineHeight: 1,
             }}
           >+</button>
-
-          <span style={{ fontSize: '.7rem', color: 'rgba(245,230,200,.4)', marginLeft: '2px' }}>×</span>
         </div>
       )}
     </div>

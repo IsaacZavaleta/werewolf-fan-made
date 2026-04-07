@@ -3,11 +3,12 @@ import { PhaseShell } from './PhaseShell';
 import { Button } from '../shared/Button';
 import { HunterShot } from './HunterShot';
 import type { Player } from '../../types';
+import cardImages from '../../data/cardImages';
 
 interface Props {
   players: Player[];
   eliminatedToday: number[];
-  winner: 'villagers' | 'wolves' | 'lovers' | null;
+  winner: 'villagers' | 'wolves' | 'lovers' | 'angel' | 'albino' | null;
   cupidLovers: [number, number] | null;
   pendingHunterShot: number | null;
   round: number;
@@ -26,18 +27,20 @@ const faceStyle: React.CSSProperties = {
 // ── Win screen ────────────────────────────────────────────────
 function WinScreen({ players, winner, cupidLovers, onRestart }: {
   players: Player[];
-  winner: 'villagers' | 'wolves' | 'lovers';
+  winner: 'villagers' | 'wolves' | 'lovers' | 'angel' | 'albino';
   cupidLovers: [number, number] | null;
   onRestart: () => void;
 }) {
-  const cfg = {
-    villagers: { icon: '🏘️', color: '#7ab87a', title: '¡El pueblo triunfa!',  sub: 'La luz vence a las tinieblas. Castronegro sobrevive.' },
-    wolves:    { icon: '🐺', color: '#e05555', title: '¡Los Lobos ganan!',      sub: 'La oscuridad se adueña de Castronegro para siempre.' },
-    lovers:    { icon: '❤️', color: '#e05555', title: '¡Los enamorados ganan!', sub: 'El amor todo lo puede, incluso en Castronegro.' },
-  }[winner];
-
+  const cfg: Record<string, { icon: string; color: string; title: string; sub: string }> = {
+    villagers: { icon: '🏘️', color: '#7ab87a', title: '¡El pueblo triunfa!',         sub: 'La luz vence a las tinieblas. Castronegro sobrevive.' },
+    wolves:    { icon: '🐺', color: '#e05555', title: '¡Los Lobos ganan!',             sub: 'La oscuridad se adueña de Castronegro para siempre.' },
+    lovers:    { icon: '❤️', color: '#e05555', title: '¡Los enamorados ganan!',        sub: 'El amor todo lo puede, incluso en Castronegro.' },
+    angel:     { icon: '😇', color: '#a78bfa', title: '¡El Ángel asciende!',          sub: 'Fue el primero en ser linchado. Gana en solitario.' },
+    albino:    { icon: '🐺❄️', color: '#93c5fd', title: '¡El Lobo Albino triunfa!',   sub: 'Eliminó a todos, lobos y aldeanos. Gana en solitario.' },
+  };
+  const c = cfg[winner] ?? cfg['wolves'];
   return (
-    <PhaseShell icon={cfg.icon} label="Fin de la partida" labelColor={cfg.color} title={cfg.title} subtitle={cfg.sub}>
+    <PhaseShell icon={c.icon} label="Fin de la partida" labelColor={c.color} title={c.title} subtitle={c.sub}>
       {winner === 'lovers' && cupidLovers && (
         <div style={{
           background: 'rgba(139,0,0,.15)', border: '1px solid rgba(224,85,85,.3)',
@@ -58,7 +61,12 @@ function WinScreen({ players, winner, cupidLovers, onRestart }: {
             border: `1px solid ${p.alive ? 'rgba(201,168,76,.25)' : 'rgba(255,255,255,.06)'}`,
             borderRadius: '8px', padding: '12px 8px', opacity: p.alive ? 1 : 0.4, textAlign: 'center',
           }}>
-            <div style={{ fontSize: '1.6rem', marginBottom: '4px' }}>{p.role?.icon ?? '❓'}</div>
+            {p.role && cardImages[p.role.id] ? (
+              <img src={cardImages[p.role.id]} alt={p.role.name}
+                style={{ width: '100%', height: '90px', objectFit: 'cover', objectPosition: 'top', borderRadius: '4px', marginBottom: '6px' }} />
+            ) : (
+              <div style={{ fontSize: '1.6rem', marginBottom: '6px' }}>{p.role?.icon ?? '❓'}</div>
+            )}
             <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '.68rem', color: p.role?.group === 'wolf' ? '#e05555' : 'var(--gold)', marginBottom: '4px' }}>
               {p.role?.name ?? '?'}
             </div>
@@ -110,17 +118,29 @@ function FlipCard({ p, isLover }: { p: Player; isLover: boolean }) {
           ...faceStyle, transform: 'rotateY(180deg)',
           background: '#0d0507',
           border: `2px solid ${isWolf ? 'rgba(224,85,85,.5)' : 'rgba(201,168,76,.4)'}`,
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px',
+          overflow: 'hidden', display: 'flex', flexDirection: 'column',
         }}>
-          <div style={{ fontSize: '3.5rem' }}>{p.role?.icon ?? '❓'}</div>
-          <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '.72rem', color: isWolf ? '#e05555' : 'var(--gold)' }}>
-            {p.role?.name ?? '?'}
+          {p.role && cardImages[p.role.id] ? (
+            <img src={cardImages[p.role.id]} alt={p.role.name}
+              style={{ width: '100%', height: '65%', objectFit: 'cover', objectPosition: 'top', display: 'block' }} />
+          ) : (
+            <div style={{ height: '65%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '3.5rem', background: 'linear-gradient(160deg, #1a0a10, #0d0507)' }}>
+              {p.role?.icon ?? '❓'}
+            </div>
+          )}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+            justifyContent: 'center', gap: '4px', padding: '8px 8px 10px',
+            background: 'linear-gradient(to bottom, rgba(13,5,7,0), #0d0507 20%)' }}>
+            <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '.68rem', color: isWolf ? '#e05555' : 'var(--gold)' }}>
+              {p.role?.name ?? '?'}
+            </div>
+            <div style={{ fontSize: '.82rem', color: 'rgba(245,230,200,.8)' }}>{p.name}</div>
+            <div style={{ fontSize: '.67rem', color: 'rgba(245,230,200,.5)', textAlign: 'center', lineHeight: 1.35 }}>
+              {p.role?.desc}
+            </div>
+            {isLover && <div style={{ fontSize: '.72rem', color: '#e05555', marginTop: '2px' }}>❤️ enamorado/a</div>}
           </div>
-          <div style={{ fontSize: '.85rem', color: 'rgba(245,230,200,.8)' }}>{p.name}</div>
-          <div style={{ fontSize: '.7rem', color: 'rgba(245,230,200,.5)', textAlign: 'center', lineHeight: 1.4 }}>
-            {p.role?.desc}
-          </div>
-          {isLover && <div style={{ fontSize: '.75rem', color: '#e05555', marginTop: '2px' }}>❤️ enamorado/a</div>}
         </div>
       </div>
     </div>

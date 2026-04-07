@@ -7,19 +7,37 @@ interface Props {
   eliminatedToday: number[];
   cupidLovers: [number, number] | null;
   round: number;
-  onContinue: () => void;
+  pendingHunterShot: number | null;
+  caballeroDied: boolean;
+  // What to do next — GamePage decides the step order
+  onContinue: () => void;          // → hunter fires (if pending) OR debate
+  continueLabel?: string;
 }
 
-export function DayAnnounce({ players, eliminatedToday, cupidLovers, round, onContinue }: Props) {
+export function DayAnnounce({
+  players, eliminatedToday, cupidLovers, round,
+  pendingHunterShot, caballeroDied,
+  onContinue, continueLabel,
+}: Props) {
   const dead = eliminatedToday.map(i => players[i]).filter(Boolean);
 
   function deathReason(p: Player): string {
-    if (!cupidLovers) return 'Eliminado esta noche';
-    const [a, b] = cupidLovers;
-    const partner = p.index === a ? b : p.index === b ? a : -1;
-    if (partner !== -1 && eliminatedToday.includes(partner)) return '💔 Murió de amor';
+    if (cupidLovers) {
+      const [a, b] = cupidLovers;
+      const partner = p.index === a ? b : p.index === b ? a : -1;
+      if (partner !== -1 && eliminatedToday.includes(partner)) return '💔 Murió de amor';
+    }
     return 'Eliminado esta noche';
   }
+
+  // Decide what button label to show
+  const btnLabel = continueLabel ?? (
+    pendingHunterShot !== null
+      ? '🏹 El Cazador dispara →'
+      : caballeroDied
+      ? '⚔️ El Caballero actúa →'
+      : 'Iniciar debate →'
+  );
 
   return (
     <PhaseShell
@@ -32,12 +50,9 @@ export function DayAnnounce({ players, eliminatedToday, cupidLovers, round, onCo
     >
       {dead.length === 0 ? (
         <div style={{
-          background: 'rgba(30,80,30,.15)',
-          border: '1px solid rgba(100,180,100,.2)',
-          borderRadius: '8px', padding: '20px 32px',
-          color: '#7ab87a',
-          fontFamily: "'Cinzel Decorative', serif",
-          fontSize: '.9rem',
+          background: 'rgba(30,80,30,.15)', border: '1px solid rgba(100,180,100,.2)',
+          borderRadius: '8px', padding: '20px 32px', color: '#7ab87a',
+          fontFamily: "'Cinzel Decorative', serif", fontSize: '.9rem',
         }}>
           ✨ Esta noche no ha muerto nadie
         </div>
@@ -45,8 +60,7 @@ export function DayAnnounce({ players, eliminatedToday, cupidLovers, round, onCo
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '440px' }}>
           {dead.map(p => (
             <div key={p.index} style={{
-              background: 'rgba(139,0,0,.15)',
-              border: '1px solid rgba(224,85,85,.25)',
+              background: 'rgba(139,0,0,.15)', border: '1px solid rgba(224,85,85,.25)',
               borderRadius: '8px', padding: '16px 24px',
               display: 'flex', alignItems: 'center', gap: '14px',
             }}>
@@ -54,7 +68,7 @@ export function DayAnnounce({ players, eliminatedToday, cupidLovers, round, onCo
                 width: '42px', height: '42px', borderRadius: '50%',
                 background: 'rgba(139,0,0,.3)', border: '1px solid rgba(224,85,85,.3)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: "'Cinzel Decorative', serif", fontSize: '.9rem', color: '#e05555',
+                fontFamily: "'Cinzel Decorative', serif", fontSize: '.9rem', color: '#e05555', flexShrink: 0,
               }}>
                 {p.name.charAt(0)}
               </div>
@@ -72,16 +86,24 @@ export function DayAnnounce({ players, eliminatedToday, cupidLovers, round, onCo
       )}
 
       <div style={{
-        maxWidth: '440px', padding: '16px 24px',
+        maxWidth: '440px', padding: '14px 24px',
         background: 'rgba(0,0,0,.3)', borderRadius: '8px',
-        fontStyle: 'italic', color: 'rgba(245,230,200,.5)',
-        fontSize: '.9rem', lineHeight: 1.65,
+        fontStyle: 'italic', color: 'rgba(245,230,200,.5)', fontSize: '.9rem', lineHeight: 1.65,
       }}>
-        🎙️ <em>"Los supervivientes observan en silencio. Es hora de que el pueblo delibere."</em>
+        🎙️ <em>"Los supervivientes observan en silencio. {
+          pendingHunterShot !== null
+            ? 'Pero el Cazador tiene un último disparo.'
+            : caballeroDied
+            ? 'La espada oxidada del Caballero aún tiene efecto.'
+            : 'Es hora de que el pueblo delibere.'
+        }"</em>
       </div>
 
-      <Button variant="primary" onClick={onContinue}>
-        Iniciar debate del día →
+      <Button
+        variant={pendingHunterShot !== null || caballeroDied ? 'danger' : 'primary'}
+        onClick={onContinue}
+      >
+        {btnLabel}
       </Button>
     </PhaseShell>
   );
