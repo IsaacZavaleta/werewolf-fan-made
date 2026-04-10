@@ -10,6 +10,7 @@ interface Props {
   onGoRules: () => void;
 }
 
+// ── Original starfield background ────────────────────────────
 function StarField() {
   return (
     <div style={{
@@ -21,7 +22,7 @@ function StarField() {
         backgroundImage: [
           'radial-gradient(1px 1px at 10% 15%, rgba(245,230,200,.7) 0%, transparent 100%)',
           'radial-gradient(1px 1px at 25% 40%, rgba(245,230,200,.5) 0%, transparent 100%)',
-          'radial-gradient(1.5px 1.5px at 40% 8%,  rgba(201,168,76,.6) 0%, transparent 100%)',
+          'radial-gradient(1.5px 1.5px at 40% 8%, rgba(201,168,76,.6) 0%, transparent 100%)',
           'radial-gradient(1px 1px at 60% 25%, rgba(245,230,200,.6) 0%, transparent 100%)',
           'radial-gradient(1px 1px at 75% 55%, rgba(245,230,200,.4) 0%, transparent 100%)',
           'radial-gradient(1.5px 1.5px at 88% 12%, rgba(245,230,200,.7) 0%, transparent 100%)',

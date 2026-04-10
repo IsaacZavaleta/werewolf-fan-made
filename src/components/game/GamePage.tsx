@@ -1,27 +1,28 @@
-import { useGame }          from '../../hooks/useGame';
-import type { Player }      from '../../types';
+import { useGame } from '../../hooks/useGame';
+import { useGameBackground, phaseToRoleId } from '../../hooks/useGameBackground';
+import type { Player } from '../../types';
 
-import { StatusBar }        from './StatusBar';
-import { NightAnnounce }    from './NightAnnounce';
-import { NightGirlHint }    from './NightGirlHint';
-import { NightPerroLobo }   from './NightPerroLobo';
-import { NightGemelas }     from './NightGemelas';
+import { StatusBar } from './StatusBar';
+import { NightAnnounce } from './NightAnnounce';
+import { NightGirlHint } from './NightGirlHint';
+import { NightPerroLobo } from './NightPerroLobo';
+import { NightGemelas } from './NightGemelas';
 import { NightNinoSalvaje } from './NightNinoSalvaje';
-import { NightCupido }      from './NightCupido';
-import { NightWolves }      from './NightWolves';
-import { NightFerozLobo }   from './NightFerozLobo';
-import { NightPadreLobos }  from './NightPadreLobos';
-import { NightVidente }     from './NightVidente';
-import { NightBruja }       from './NightBruja';
-import { NightProtector }   from './NightProtector';
-import { NightZorro }       from './NightZorro';
-import { DayAnnounce }      from './DayAnnounce';
-import { HunterShot }       from './HunterShot';
-import { DayCaballero }     from './DayCaballero';
-import { DayDebate }        from './DayDebate';
-import { DayVote }          from './DayVote';
-import { DayJudge }         from './DayJudge';
-import { DayEliminate }     from './DayEliminate';
+import { NightCupido } from './NightCupido';
+import { NightWolves } from './NightWolves';
+import { NightFerozLobo } from './NightFerozLobo';
+import { NightPadreLobos } from './NightPadreLobos';
+import { NightVidente } from './NightVidente';
+import { NightBruja } from './NightBruja';
+import { NightProtector } from './NightProtector';
+import { NightZorro } from './NightZorro';
+import { DayAnnounce } from './DayAnnounce';
+import { HunterShot } from './HunterShot';
+import { DayCaballero } from './DayCaballero';
+import { DayDebate } from './DayDebate';
+import { DayVote } from './DayVote';
+import { DayJudge } from './DayJudge';
+import { DayEliminate } from './DayEliminate';
 
 interface Props {
   players: Player[];
@@ -53,6 +54,11 @@ export function GamePage({ players, onRestart }: Props) {
     eliminatedToday, winner, pendingHunterShot,
     judgeUsed,
   } = gs;
+
+  // ── Three.js background (moon/sun + card) ───────────────
+  const isNight = phase.startsWith('night');
+  const bgCardRole = phaseToRoleId(phase);
+  const bgCanvasRef = useGameBackground({ timeOfDay: isNight ? 'night' : 'day', bgCardRole });
 
   function getName(roleId: string) {
     return (
@@ -240,8 +246,17 @@ export function GamePage({ players, onRestart }: Props) {
 
   return (
     <>
+      {/* Three.js moon/sun + card background */}
+      <canvas
+        ref={bgCanvasRef}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 0,
+          width: '100%', height: '100%',
+          pointerEvents: 'none',
+        }}
+      />
       <StatusBar players={gp} round={round} phase={phase} cupidLovers={cupidLovers} />
-      <div style={{ paddingTop: '48px' }}>{screen}</div>
+      <div style={{ position: 'relative', zIndex: 1, paddingTop: '48px' }}>{screen}</div>
     </>
   );
 }

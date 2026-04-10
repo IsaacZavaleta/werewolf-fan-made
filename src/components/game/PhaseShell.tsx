@@ -8,9 +8,14 @@ interface Props {
   subtitle?: string;
   children: ReactNode;
   round?: number;
+  /** Canvas ref from useGameBackground — rendered as fixed bg */
+  bgCanvas?: React.RefObject<HTMLCanvasElement>;
 }
 
-export function PhaseShell({ icon, label, labelColor = 'var(--gold)', title, subtitle, children, round }: Props) {
+export function PhaseShell({
+  icon, label, labelColor = 'var(--gold)',
+  title, subtitle, children, round,
+}: Props) {
   return (
     <div style={outer}>
       {round !== undefined && (
@@ -33,6 +38,7 @@ const outer: CSSProperties = {
   alignItems: 'center', justifyContent: 'center',
   textAlign: 'center', padding: '40px 20px 60px',
   animation: 'fadeIn .35s ease',
+  position: 'relative', zIndex: 1,
 };
 
 const roundBadge: CSSProperties = {
@@ -50,21 +56,16 @@ const phaseLabel: CSSProperties = {
 const titleStyle: CSSProperties = {
   fontFamily: "'Cinzel Decorative', serif",
   fontSize: 'clamp(1.3rem, 5vw, 2.2rem)',
-  color: 'var(--moon)',
-  marginBottom: '10px',
-  lineHeight: 1.15,
+  color: 'var(--moon)', marginBottom: '10px', lineHeight: 1.15,
 };
 
 const subtitleStyle: CSSProperties = {
-  fontStyle: 'italic',
-  color: 'rgba(245,230,200,.5)',
-  fontSize: '1rem', maxWidth: '500px',
-  lineHeight: 1.65, marginBottom: '0',
+  fontStyle: 'italic', color: 'rgba(245,230,200,.5)',
+  fontSize: '1rem', maxWidth: '500px', lineHeight: 1.65, marginBottom: '0',
 };
 
 const body: CSSProperties = {
   marginTop: '32px',
   display: 'flex', flexDirection: 'column',
-  alignItems: 'center', gap: '16px',
-  width: '100%',
+  alignItems: 'center', gap: '16px', width: '100%',
 };

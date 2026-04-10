@@ -49,7 +49,7 @@ function RolesGrid({ ids, roleStates, onToggle, onCountChange }: {
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
       gap: '12px',
     }}>
       {roles.map((role) => (
