@@ -22,7 +22,7 @@ export function NightPadreLobos({ players, padreName, wolfVictim, onInfect, onPa
       label="Fase Nocturna · Padre de los Lobos"
       labelColor="#e05555"
       title="El Padre de los Lobos decide"
-      subtitle={`Solo ${padreName} abre los ojos. Puede usar su poder una única vez.`}
+      subtitle={`Solo el padre de los lobos abre los ojos. Puede usar su poder una única vez.`}
     >
       <div style={{
         background: 'rgba(139,0,0,.12)', border: '1px solid rgba(224,85,85,.2)',

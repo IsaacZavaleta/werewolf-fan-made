@@ -21,7 +21,7 @@ export function NightProtector({ players, protectorName, lastProtected, onConfir
       label="Fase Nocturna · Protector"
       labelColor="#7aaad4"
       title="El Protector despierta"
-      subtitle={`Solo ${protectorName} abre los ojos. Elige a quién proteger esta noche.`}
+      subtitle={`Solo el protector abre los ojos. Elige a quién proteger esta noche.`}
     >
       {lastProtected !== null && (
         <div style={{

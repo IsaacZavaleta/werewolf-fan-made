@@ -13,7 +13,6 @@ export function NightGirlHint({ girlName, onConfirm }: Props) {
       label="Primera Noche · La Niña"
       labelColor="#7aaad4"
       title="Recordatorio a la Niña"
-      subtitle={`Solo el narrador lee esto en voz baja a ${girlName}`}
     >
       <div style={{
         background: 'rgba(74,111,165,.08)',
@@ -26,9 +25,6 @@ export function NightGirlHint({ girlName, onConfirm }: Props) {
         color: 'rgba(245,230,200,.8)',
         textAlign: 'left',
       }}>
-        <div style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: '.8rem', color: '#7aaad4', marginBottom: '12px' }}>
-          👧 Para: {girlName}
-        </div>
         <p style={{ margin: 0 }}>
           Cuando los Hombres Lobo se despierten, <strong>puedes entreabrír los ojos muy discretamente</strong> para intentar verlos.
           <br /><br />

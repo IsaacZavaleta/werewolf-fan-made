@@ -52,7 +52,7 @@ export function NightZorro({ players, zorroName, zorroActive, onConfirm, onSkip 
       label="Fase Nocturna · Zorro"
       labelColor="#f39c12"
       title="El Zorro despierta"
-      subtitle={`Solo ${zorroName} abre los ojos. Elige exactamente 3 jugadores para inspeccionar.`}
+      subtitle={`Solo el zorro abre los ojos. Elige exactamente 3 jugadores para inspeccionar.`}
     >
       <div style={{
         background: 'rgba(243,156,18,.08)',

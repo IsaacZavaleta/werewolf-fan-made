@@ -12,16 +12,20 @@ export function RulesHero({ onGoSetup }: Props) {
       alignItems: 'center', justifyContent: 'center',
       textAlign: 'center', gap: '16px', paddingTop: '60px',
     }}>
-      <div style={eyebrow}>🌕 &nbsp; Juego de Mesa &bull; Deducción Social</div>
 
       <h1 style={titleStyle}>
-        Hombres Lobo<br />de Castronegro
+        Hombres Lobo
       </h1>
-
-      <p style={subtitleStyle}>
-        Una noche oscura cae sobre el pueblo.<br />
-        Engaña, deduce y sobrevive… o devora.
-      </p>
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(26, 15, 15, 0.31) 0%, rgba(10, 6, 8, 0.33) 100%)',
+        border: '1px solid rgba(201,168,76,0.2)',
+        borderRadius: '10px',
+        padding: '5px',
+        backdropFilter: 'blur(6px)',
+        boxShadow: '0 4px 40px rgba(0,0,0,.6), inset 0 1px 0 rgba(201,168,76,0.08)',
+      }}>
+        <div style={subtitleStyle}>Fan made sin fines de lucro.</div>
+      </div>
 
       <button onClick={onGoSetup} style={ctaStyle}>
         ⚔️ &nbsp; Preparar partida

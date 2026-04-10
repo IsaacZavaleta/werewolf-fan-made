@@ -37,7 +37,7 @@ export function NightWolves({ players, round, onConfirm }: Props) {
       }}>
         🐺 <strong style={{ color: '#e05555' }}>Lobos esta noche:</strong>{' '}
         {wolves.length > 0
-          ? wolves.map(w => w.name).join(', ')
+          ? wolves.length
           : <em>ninguno vivo</em>}
       </div>
 

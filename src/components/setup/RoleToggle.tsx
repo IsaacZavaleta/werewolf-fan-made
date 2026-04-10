@@ -10,14 +10,14 @@ interface Props {
 }
 
 const groupColors: Record<string, string> = {
-  wolf:    '#e05555',
+  wolf: '#e05555',
   special: '#7aaad4',
   neutral: 'var(--gold)',
 };
 
 export function RoleToggle({ role, active, count, onToggle, onCountChange }: Props) {
   const color = groupColors[role.group] ?? 'var(--gold)';
-  const img   = cardImages[role.id];
+  const img = cardImages[role.id];
 
   return (
     <div style={{
@@ -34,7 +34,7 @@ export function RoleToggle({ role, active, count, onToggle, onCountChange }: Pro
     }}>
       {/* Card image thumbnail */}
       {img && (
-        <div style={{ width: '100%', height: '90px', overflow: 'hidden', flexShrink: 0 }}
+        <div style={{ width: '100%', height: '150px', overflow: 'hidden', flexShrink: 0 }}
           onClick={onToggle}>
           <img
             src={img} alt={role.name}
@@ -65,36 +65,40 @@ export function RoleToggle({ role, active, count, onToggle, onCountChange }: Pro
       </div>
 
       {/* Count controls — only when active */}
-      {active && (
+      {active && role.max > 1 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0 10px 10px' }}>
-          <button
-            onClick={(e) => { e.stopPropagation(); onCountChange(-1); }}
-            style={{
-              width: '22px', height: '22px', borderRadius: '3px',
-              background: 'rgba(255,255,255,.07)', border: '1px solid rgba(201,168,76,.3)',
-              color: 'var(--gold)', cursor: 'pointer', fontSize: '1rem',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0, lineHeight: 1,
-            }}
-          >−</button>
 
-          <span style={{
-            fontFamily: "'Cinzel Decorative', serif", fontSize: '.75rem',
-            color: 'var(--moon)', minWidth: '18px', textAlign: 'center', flex: 1,
-          }}>
-            {count}
-          </span>
+          {role.max > 1 && <>
+            <button
+              onClick={(e) => { e.stopPropagation(); onCountChange(-1); }}
+              style={{
+                width: '22px', height: '22px', borderRadius: '3px',
+                background: 'rgba(255,255,255,.07)', border: '1px solid rgba(201,168,76,.3)',
+                color: 'var(--gold)', cursor: 'pointer', fontSize: '1rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, lineHeight: 1,
+              }}
+            >−</button>
 
-          <button
-            onClick={(e) => { e.stopPropagation(); onCountChange(1); }}
-            style={{
-              width: '22px', height: '22px', borderRadius: '3px',
-              background: 'rgba(255,255,255,.07)', border: '1px solid rgba(201,168,76,.3)',
-              color: 'var(--gold)', cursor: 'pointer', fontSize: '1rem',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0, lineHeight: 1,
-            }}
-          >+</button>
+            <span style={{
+              fontFamily: "'Cinzel Decorative', serif", fontSize: '.75rem',
+              color: 'var(--moon)', minWidth: '18px', textAlign: 'center', flex: 1,
+            }}>
+              {count}
+            </span>
+
+            <button
+              onClick={(e) => { e.stopPropagation(); onCountChange(1); }}
+              style={{
+                width: '22px', height: '22px', borderRadius: '3px',
+                background: 'rgba(255,255,255,.07)', border: '1px solid rgba(201,168,76,.3)',
+                color: 'var(--gold)', cursor: 'pointer', fontSize: '1rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, lineHeight: 1,
+              }}
+            >+</button>
+          </>
+          }
         </div>
       )}
     </div>

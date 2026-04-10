@@ -50,7 +50,7 @@ export function NightBruja({ players, brujaName, lifeUsed, deathUsed, onAction }
       label="Fase Nocturna · Bruja"
       labelColor="#a78bfa"
       title="La Bruja despierta"
-      subtitle={`Solo ${brujaName} abre los ojos.`}
+      subtitle={`Solo la bruja abre los ojos.`}
     >
       {/* Info — bruja doesn't know who was attacked */}
       <div style={{

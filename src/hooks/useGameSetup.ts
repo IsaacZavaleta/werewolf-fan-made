@@ -84,6 +84,14 @@ export function useGameSetup() {
       return Array.from({ length: roleStates[r.id].count }, () => r);
     });
 
+    if (pool.some(r => r.group === 'neutral') === false) {
+      setRolesError('Debe haber al menos un Aldeano activo.');
+      return;
+    }
+    if (pool.some(r => r.group === 'wolf') === false) {
+      setRolesError('Debe haber al menos un Hombre Lobo activo.');
+      return;
+    }
     if (pool.length < total) {
       setRolesError(`Faltan ${total - pool.length} roles. Activa más roles o aumenta su cantidad.`);
       return;

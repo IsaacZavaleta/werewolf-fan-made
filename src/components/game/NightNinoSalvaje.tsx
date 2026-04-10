@@ -20,7 +20,7 @@ export function NightNinoSalvaje({ players, ninoName, onConfirm }: Props) {
       label="Primera Noche · Niño Salvaje"
       labelColor="#7ab87a"
       title="El Niño Salvaje despierta"
-      subtitle={`Solo ${ninoName} abre los ojos. Elige a tu modelo a seguir.`}
+      subtitle={`Solo el niño salvaje abre los ojos. Elige a tu modelo a seguir.`}
     >
       <div style={{
         background: 'rgba(77,122,77,.1)', border: '1px solid rgba(122,184,122,.2)',

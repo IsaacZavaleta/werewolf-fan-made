@@ -28,7 +28,7 @@ export function NightVidente({ players, videnteName, onConfirm }: Props) {
       label="Fase Nocturna · Vidente"
       labelColor="#7aaad4"
       title="La Vidente despierta"
-      subtitle={`Solo ${videnteName} abre los ojos. Señala a quien quieras inspeccionar.`}
+      subtitle={`Solo la vidente abre los ojos. Señala a quien quieras inspeccionar.`}
     >
       {/* Player grid */}
       <div style={{
@@ -120,13 +120,6 @@ export function NightVidente({ players, videnteName, onConfirm }: Props) {
             </div>
             <div style={{ fontSize: '.82rem', color: 'rgba(245,230,200,.7)', lineHeight: 1.55 }}>
               {target.role.desc}
-            </div>
-            <div style={{
-              marginTop: '8px', fontSize: '.78rem',
-              color: isWolf ? '#e05555' : '#7ab87a',
-              fontFamily: "'Cinzel Decorative', serif",
-            }}>
-              {isWolf ? '⚠️ ES UN HOMBRE LOBO' : '✓ No es un lobo'}
             </div>
           </div>
         </div>

@@ -12,7 +12,7 @@ export function NightPerroLobo({ playerName, onChoose }: Props) {
       label="Primera Noche · Perro Lobo"
       labelColor="#e05555"
       title="El Perro Lobo despierta"
-      subtitle={`Solo ${playerName} abre los ojos. Elige tu bando para toda la partida.`}
+      subtitle={`Solo el niño perro lobo abre los ojos. Elige tu bando para toda la partida.`}
     >
       <div style={{
         background: 'rgba(139,0,0,.1)', border: '1px solid rgba(224,85,85,.2)',

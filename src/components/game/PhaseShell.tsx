@@ -21,9 +21,6 @@ export function PhaseShell({
       {round !== undefined && (
         <div style={roundBadge}>Ronda {round}</div>
       )}
-      <div style={{ fontSize: '3.5rem', marginBottom: '10px', filter: 'drop-shadow(0 0 20px rgba(201,168,76,.3))' }}>
-        {icon}
-      </div>
       <div style={{ ...phaseLabel, color: labelColor }}>{label}</div>
       <h2 style={titleStyle}>{title}</h2>
       {subtitle && <p style={subtitleStyle}>{subtitle}</p>}

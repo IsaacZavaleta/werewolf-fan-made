@@ -31,7 +31,7 @@ export function NightCupido({ players, cupidName, onConfirm, onSkip }: Props) {
       label="Primera Noche · Cupido"
       labelColor="#e05555"
       title="Cupido despierta"
-      subtitle={`Solo ${cupidName} abre los ojos. Elige a los dos enamorados.`}
+      subtitle={`Solo cupido abre los ojos. Elige a los dos enamorados.`}
     >
       <div style={{
         background: 'rgba(139,0,0,.1)',

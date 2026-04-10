@@ -90,7 +90,7 @@ export function DayAnnounce({
         background: 'rgba(0,0,0,.3)', borderRadius: '8px',
         fontStyle: 'italic', color: 'rgba(245,230,200,.5)', fontSize: '.9rem', lineHeight: 1.65,
       }}>
-        🎙️ <em>"Los supervivientes observan en silencio. {
+        <em>"{
           pendingHunterShot !== null
             ? 'Pero el Cazador tiene un último disparo.'
             : caballeroDied
