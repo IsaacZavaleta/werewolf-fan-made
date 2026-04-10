@@ -5,7 +5,7 @@ interface Props {
   onChoose: (side: 'wolf' | 'villager') => void;
 }
 
-export function NightPerroLobo({ playerName, onChoose }: Props) {
+export function NightPerroLobo({ onChoose }: Props) {
   return (
     <PhaseShell
       icon="🐕🌙"

@@ -12,7 +12,7 @@ interface Props {
   onConfirm: () => void;
 }
 
-export function NightVidente({ players, videnteName, onConfirm }: Props) {
+export function NightVidente({ players, onConfirm }: Props) {
   const [inspected, setInspected] = useState<number | null>(null);
   const [revealed,  setRevealed]  = useState(false);
 

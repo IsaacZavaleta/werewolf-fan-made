@@ -26,7 +26,7 @@ function potionBtn(
   };
 }
 
-export function NightBruja({ players, brujaName, lifeUsed, deathUsed, onAction }: Props) {
+export function NightBruja({ players, lifeUsed, deathUsed, onAction }: Props) {
   const [wantsLife,  setWantsLife]  = useState(false);
   const [killTarget, setKillTarget] = useState<number | null>(null);
   const [pickingTarget, setPickingTarget] = useState(false);

@@ -9,7 +9,7 @@ interface Props {
   onConfirm: (modelIdx: number) => void;
 }
 
-export function NightNinoSalvaje({ players, ninoName, onConfirm }: Props) {
+export function NightNinoSalvaje({ players, onConfirm }: Props) {
   const [selected, setSelected] = useState<number | null>(null);
 
   const candidates = players.filter(p => p.alive && p.role?.id !== 'nino');

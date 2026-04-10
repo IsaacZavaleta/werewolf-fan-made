@@ -13,7 +13,7 @@ interface Props {
 }
 
 export function PhaseShell({
-  icon, label, labelColor = 'var(--gold)',
+  label, labelColor = 'var(--gold)',
   title, subtitle, children, round,
 }: Props) {
   return (

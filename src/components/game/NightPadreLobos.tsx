@@ -11,7 +11,7 @@ interface Props {
   onPass: () => void;
 }
 
-export function NightPadreLobos({ players, padreName, wolfVictim, onInfect, onPass }: Props) {
+export function NightPadreLobos({ players, wolfVictim, onInfect, onPass }: Props) {
   const [confirming, setConfirming] = useState(false);
 
   const victim = wolfVictim !== null ? players[wolfVictim] : null;

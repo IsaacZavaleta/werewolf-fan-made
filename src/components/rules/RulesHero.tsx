@@ -38,11 +38,6 @@ export function RulesHero({ onGoSetup }: Props) {
 
 // ── Styles ────────────────────────────────────────────────────
 
-const eyebrow: CSSProperties = {
-  letterSpacing: '.35em', fontSize: '.78rem',
-  textTransform: 'uppercase', color: 'var(--gold)', opacity: .8,
-};
-
 const titleStyle: CSSProperties = {
   fontFamily: "'Cinzel Decorative', serif",
   fontSize: 'clamp(2rem, 7vw, 5rem)',

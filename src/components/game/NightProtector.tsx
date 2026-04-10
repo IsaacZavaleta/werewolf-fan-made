@@ -12,7 +12,7 @@ interface Props {
   onSkip: () => void;
 }
 
-export function NightProtector({ players, protectorName, lastProtected, onConfirm, onSkip }: Props) {
+export function NightProtector({ players, lastProtected, onConfirm, onSkip }: Props) {
   const [selected, setSelected] = useState<number | null>(null);
 
   return (

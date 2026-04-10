@@ -10,7 +10,7 @@ interface Props {
   onSkip: () => void;
 }
 
-export function NightCupido({ players, cupidName, onConfirm, onSkip }: Props) {
+export function NightCupido({ players, onConfirm, onSkip }: Props) {
   const [selected, setSelected] = useState<number[]>([]);
 
   const alive = players.filter(p => p.alive);

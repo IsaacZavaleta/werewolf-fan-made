@@ -13,7 +13,7 @@ interface Props {
   onSkip: () => void;
 }
 
-export function NightZorro({ players, zorroName, zorroActive, onConfirm, onSkip }: Props) {
+export function NightZorro({ players, zorroActive, onConfirm, onSkip }: Props) {
   const [selected, setSelected] = useState<number[]>([]);
   const [revealed, setRevealed] = useState(false);
 

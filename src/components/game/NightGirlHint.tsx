@@ -6,7 +6,7 @@ interface Props {
   onConfirm: () => void;
 }
 
-export function NightGirlHint({ girlName, onConfirm }: Props) {
+export function NightGirlHint({ onConfirm }: Props) {
   return (
     <PhaseShell
       icon="👧"
